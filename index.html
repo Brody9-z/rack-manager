@@ -432,8 +432,7 @@
   <button class="danger" onclick="clearAll()">💣 清空</button>
   <button onclick="toggleLabels()" id="labelBtn">🏷标签</button>
   <div class="sep"></div>
-  <button onclick="startPlaceAntenna()" style="background:#2a6a3a;">📡 放置天线</button>
-  <span class="hint">🖱 左键旋转 · 滚轮缩放 · 点击空位添加 · <b style="color:#e94560;">「移动」模式拖拽/b> · Enter确认 · Esc取消</span>
+  <button onclick="<span class="hint">🖱 左键旋转 · 滚轮缩放 · 点击空位添加 · <b style="color:#e94560;">「移动」模式拖拽/b> · Enter确认 · Esc取消</span>
 </div>
 
 <!-- 3D Viewport -->
@@ -446,10 +445,8 @@
 
 <!-- Cable mode hint -->
 <div id="cableMode">🔌 连线模式 - 依次点击两个设备，选择网络类型</div>
-<div id="moveMode">📦 移动模式 - 左键点击机柜/天线并拖动来调整位置</div>
+<div id="moveMode">📦 移动模式 - 左键点击机柜并拖动来调整位置</div>
 <div id="hoverInfo">💡 💡 按 Esc 取消选中 / 取消过滤选中 / 取消过滤</div>
-<div id="antennaHint" style="position:fixed;bottom:72px;right:20px;display:none;background:#16213e;border:1px solid #00E676;border-radius:4px;padding:6px 10px;font-size:11px;color:#00E676;z-index:100;">📡 点击场景地面放置天线</div>
-
 <!-- Status bar -->
 <div id="status">
   <span id="rackCount">机柜: 0</span>
@@ -614,7 +611,7 @@ scene.background = new THREE.Color(0x0a0a1e);
   // Add a big watermark to confirm new version
   const watermarkDiv = document.createElement('div');
   watermarkDiv.id = 'versionBadge';
-  watermarkDiv.textContent = 'v0.9 ✨ v0.9 独立天线放置';
+  watermarkDiv.textContent = 'v0.8 基础功能版';
   watermarkDiv.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:9999;color:#e94560;font-size:14px;font-weight:bold;background:rgba(22,33,62,0.7);backdrop-filter:blur(8px);padding:6px 18px;border-radius:8px;border:1px solid rgba(233,69,96,0.3);letter-spacing:1px;';
   document.body.appendChild(watermarkDiv);
 
@@ -1352,87 +1349,6 @@ function getDeviceWorldPos(device) {
 }
 
 
-// ==================== ANTENNA 3D MODEL ====================
-function buildAntennaWorld(antData) {
-  const g = new THREE.Group();
-  g.userData.antennaId = antData.id;
-  const mainColor = new THREE.Color(antData.color || '#00E676');
-  const h = 2.0, w = 1.5, d = 1.2;
-
-  // Tripod legs
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x8899aa, roughness: 0.4, metalness: 0.5 });
-  for (let i = 0; i < 3; i++) {
-    const angle = (i / 3) * Math.PI * 2;
-    const lx = Math.cos(angle) * 0.5, lz = Math.sin(angle) * 0.5;
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, h * 0.5, 6), legMat);
-    leg.position.set(lx * 0.3, h * 0.12, lz * 0.3);
-    leg.rotation.z = Math.cos(angle) * 0.2;
-    leg.rotation.x = Math.sin(angle) * 0.2;
-    g.add(leg);
-    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.03, 6),
-      new THREE.MeshStandardMaterial({ color: 0x555566, roughness: 0.8 }));
-    foot.position.set(lx * 0.55, 0.015, lz * 0.55);
-    g.add(foot);
-  }
-
-  // Main body
-  const bodyMat = new THREE.MeshStandardMaterial({ color: mainColor, roughness: 0.3, metalness: 0.35, emissive: mainColor, emissiveIntensity: 0.06 });
-  const body = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, h * 0.4, d * 0.6), bodyMat);
-  body.position.y = h * 0.4; body.castShadow = true; body.receiveShadow = true;
-  g.add(body);
-
-  // Front panel
-  const panelMat = new THREE.MeshStandardMaterial({ color: mainColor.clone().multiplyScalar(1.15), roughness: 0.25, metalness: 0.2 });
-  const panel = new THREE.Mesh(new THREE.BoxGeometry(w * 0.6, h * 0.3, 0.03), panelMat);
-  panel.position.set(0, h * 0.4, d * 0.6 / 2 + 0.005);
-  g.add(panel);
-
-  // RF connectors
-  const connMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.7, metalness: 0.3 });
-  for (const side of [-1, 1]) {
-    const nc = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.05, 8), connMat);
-    nc.rotation.x = Math.PI / 2;
-    nc.position.set(side * 0.2, h * 0.4, d * 0.6 / 2 + 0.027);
-    g.add(nc);
-  }
-
-  // Feed horn
-  const hornMat = new THREE.MeshStandardMaterial({ color: 0xccccdd, roughness: 0.15, metalness: 0.6 });
-  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.15, 8), hornMat);
-  horn.rotation.x = -Math.PI / 2;
-  horn.position.set(0, h * 0.4, d * 0.6 / 2 + 0.08);
-  g.add(horn);
-
-  // Glowing tip
-  const tipMat = new THREE.MeshStandardMaterial({ color: 0x00ffaa, emissive: 0x00ffaa, emissiveIntensity: 0.4 });
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), tipMat);
-  tip.position.set(0, h * 0.4, d * 0.6 / 2 + 0.16);
-  g.add(tip);
-
-  // Signal waves
-  const waveMat = new THREE.LineBasicMaterial({ color: 0x00ffaa, transparent: true, opacity: 0.2 });
-  for (let i = 0; i < 4; i++) {
-    const r = 0.08 + i * 0.1;
-    const pts = [];
-    for (let a = -0.8; a <= 0.8; a += 0.05) {
-      pts.push(new THREE.Vector3(Math.sin(a) * r, h * 0.4 + (Math.cos(a) - 1) * r * 0.4, d * 0.6 / 2 + 0.16 + i * 0.05));
-    }
-    const wl = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), waveMat.clone());
-    g.add(wl);
-  }
-
-  // Name label
-  const labelDiv = document.createElement('div');
-  labelDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.95);background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);padding:3px 10px;border-radius:4px;border-left:2px solid ${antData.color || '#00E676'};white-space:nowrap;">📡 ${antData.name}</div>`;
-  const label = new CSS2DObject(labelDiv);
-  label.position.set(0, h + 0.2, 0);
-  g.add(label);
-
-  g.position.set(antData.position.x, 0, antData.position.z);
-  return g;
-}
-
-
 // ==================== FILTER & HIGHLIGHT ====================
 function applyFilters() {
   // Update connection visibility based on filter + highlight
@@ -1558,11 +1474,6 @@ function rebuildScene() {
 
 
   // Build antennas (world-space)
-  for (const ant of data.antennas) {
-    const ag = buildAntennaWorld(ant);
-    antennaGroup.add(ag);
-  }
-
   for (const conn of data.connections) {
     const cg = buildConnection(conn);
     if (cg) {
@@ -2356,22 +2267,6 @@ function updatePanel() {
   }
 
 
-  // ---- Antenna List ----
-  if (data.antennas.length > 0) {
-    html += `<div class="filter-group" style="margin-top:12px;">
-      <div class="title">📡 室外天线线</div>`;
-    for (const ant of data.antennas) {
-      html += `<div class="dev-item" onclick="editAntenna(${ant.id})">
-        <div class="color-dot" style="background:${ant.color || '#00E676'}"></div>
-        <div class="dev-info">
-          <div class="dev-name">📡 ${ant.name}</div>
-          <div class="dev-ip">位置: ${ant.position.x}, ${ant.position.z}</div>
-        </div>
-        <div class="dev-del" onclick="event.stopPropagation();deleteAntenna(${ant.id})">×</div>
-      </div>`;
-    }
-    html += `</div>`;
-  }
 
   panel.innerHTML = html;
 }
@@ -2442,47 +2337,6 @@ function updateCableUI() {
   }
 }
 
-
-// ==================== ANTENNA MANAGEMENT ====================
-window.startPlaceAntenna = function() {
-  if (data.antennaPlaceMode) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
-  data.antennaPlaceMode = true;
-  document.getElementById('antennaHint').style.display = 'block';
-  document.getElementById('antennaHint').textContent = '📡 点击场景地面放置天线（Esc取消消;
-  if (data.cableMode) { data.cableMode = false; data.cableFirstId = null; updateCableUI(); }
-  if (data.moveMode) { data.moveMode = false; updateMoveUI(); }
-};
-
-function placeAntenna(worldX, worldZ) {
-  const name = prompt('天线名称:', `室外天线线 #${data.nextAntennaId}`);
-  if (name === null) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
-  data.antennas.push({
-    id: data.nextAntennaId++,
-    name: name || `室外天线线 #${data.nextAntennaId-1}`,
-    position: { x: Math.round(worldX * 10) / 10, z: Math.round(worldZ * 10) / 10 },
-    color: '#00E676',
-    notes: ''
-  });
-  data.antennaPlaceMode = false;
-  document.getElementById('antennaHint').style.display = 'none';
-  rebuildScene();
-}
-
-window.deleteAntenna = function(antId) {
-  const ant = data.antennas.find(a => a.id === antId);
-  if (!ant || !confirm(`确定删除天线{ant.name}」吗？`)) return;
-  data.antennas = data.antennas.filter(a => a.id !== antId);
-  rebuildScene();
-};
-
-window.editAntenna = function(antId) {
-  const ant = data.antennas.find(a => a.id === antId);
-  if (!ant) return;
-  const newName = prompt('天线名称:', ant.name);
-  if (newName === null) return;
-  ant.name = newName || ant.name;
-  rebuildScene();
-};
 
 // ==================== STATUS ====================
 function updateStatus() {
