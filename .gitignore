@@ -1,0 +1,6 @@
+node_modules/
+_edge_temp*/
+_.ps1
+_.js
+_.mjs
+screenshot*.png

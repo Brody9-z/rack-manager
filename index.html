@@ -1,0 +1,2687 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 机柜管理系统 - Rack Visualizer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    overflow: hidden;
+    height: 100vh;
+  }
+  #viewport {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+  }
+  /* ---- Toolbar (Glass) ---- */
+  #toolbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    background: rgba(22,33,62,0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(26,74,122,0.4);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    z-index: 100;
+    gap: 8px;
+  }
+  #toolbar .title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #e94560;
+    margin-right: 20px;
+    letter-spacing: 1px;
+  }
+  #toolbar .title small {
+    font-size: 11px;
+    font-weight: 400;
+    color: #888;
+  }
+  #toolbar button {
+    background: #1a4a7a;
+    border: none;
+    color: #ddd;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+    white-space: nowrap;
+  }
+  #toolbar button:hover { background: #2a5a9a; color: #fff; }
+  #toolbar button.danger { background: #6b1a2a; }
+  #toolbar button.danger:hover { background: #8a2a3a; }
+  #toolbar button.primary { background: #e94560; color: #fff; }
+  #toolbar button.primary:hover { background: #ff5570; }
+  #toolbar .sep { width: 1px; height: 24px; background: #333; margin: 0 8px; }
+  #toolbar .hint {
+    font-size: 12px;
+    color: #666;
+    margin-left: auto;
+  }
+  /* ---- Status bar (Glass) ---- */
+  #status {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 28px;
+    background: rgba(22,33,62,0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(26,74,122,0.3);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 12px;
+    color: #666;
+    z-index: 100;
+    gap: 16px;
+  }
+  #status span { color: #888; }
+  /* ---- Side panel (Glass) ---- */
+  #sidePanel {
+    position: fixed;
+    top: 52px; right: 0;
+    width: 320px;
+    bottom: 28px;
+    background: rgba(22,33,62,0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(26,74,122,0.3);
+    z-index: 50;
+    overflow-y: auto;
+    padding: 12px;
+    display: none;
+  }
+  #sidePanel.open { display: block; }
+  #sidePanel h3 {
+    font-size: 14px;
+    color: #e94560;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1a4a7a;
+  }
+  #sidePanel .filter-group {
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    background: #0d1b36;
+    border-radius: 6px;
+  }
+  #sidePanel .filter-group .title {
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 6px;
+  }
+  #sidePanel .filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    cursor: pointer;
+    font-size: 13px;
+    color: #ccc;
+  }
+  #sidePanel .filter-item:hover { color: #fff; }
+  #sidePanel .filter-item .dot {
+    width: 12px; height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  #sidePanel .filter-item input[type="checkbox"] {
+    accent-color: #e94560;
+    width: 15px; height: 15px;
+    cursor: pointer;
+  }
+  #sidePanel .filter-item .count {
+    margin-left: auto;
+    font-size: 11px;
+    color: #555;
+  }
+  #sidePanel .filter-item .select-all {
+    color: #e94560;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #sidePanel .filter-item .select-all:hover { color: #ff5570; }
+  #sidePanel .rack-info { margin-bottom: 12px; }
+  #sidePanel .rack-info label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 2px;
+  }
+  #sidePanel .rack-info input {
+    width: 100%;
+    padding: 6px 8px;
+    background: #0d1b36;
+    border: 1px solid #1a4a7a;
+    border-radius: 4px;
+    color: #eee;
+    font-size: 13px;
+  }
+  #sidePanel .dev-list { margin-top: 8px; }
+  #sidePanel .dev-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 8px;
+    background: #0d1b36;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: background .2s;
+    gap: 8px;
+  }
+  #sidePanel .dev-item:hover { background: #1a2a4a; }
+  #sidePanel .dev-item .color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  #sidePanel .dev-item .dev-info {
+    flex: 1;
+    min-width: 0;
+  }
+  #sidePanel .dev-item .dev-info .dev-name {
+    font-size: 13px;
+    color: #ddd;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #sidePanel .dev-item .dev-info .dev-ip {
+    font-size: 11px;
+    color: #888;
+  }
+  #sidePanel .dev-item .dev-slot {
+    font-size: 11px;
+    color: #666;
+  }
+  #sidePanel .dev-item .dev-del {
+    color: #e94560;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 2px;
+    opacity: 0.6;
+  }
+  #sidePanel .dev-item .dev-del:hover { opacity: 1; }
+  #sidePanel .conn-list { margin-top: 4px; }
+  #sidePanel .conn-item {
+    font-size: 12px;
+    color: #888;
+    padding: 4px 8px;
+    background: #0d1b36;
+    border-radius: 3px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-left: 3px solid #444;
+  }
+  #sidePanel .conn-item .conn-del {
+    color: #e94560;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: auto;
+    opacity: 0.6;
+  }
+  #sidePanel .conn-item .conn-del:hover { opacity: 1; }
+  /* ---- Network type popup ---- */
+  #netTypePopup {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(22,33,62,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(26,74,122,0.4);
+    border-radius: 12px;
+    padding: 20px;
+    z-index: 300;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    min-width: 300px;
+  }
+  #netTypePopup.open { display: block; }
+  #netTypePopup h3 {
+    font-size: 15px;
+    color: #e94560;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  #netTypePopup .net-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #eee;
+    border: 1px solid transparent;
+    transition: all .2s;
+    background: #0d1b36;
+  }
+  #netTypePopup .net-btn:hover {
+    background: #1a2a4a;
+    border-color: #1a4a7a;
+  }
+  #netTypePopup .net-btn .dot {
+    width: 14px; height: 14px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  #netTypePopup .cancel-row {
+    text-align: center;
+    margin-top: 8px;
+  }
+  #netTypePopup .cancel-row button {
+    background: #1a4a7a;
+    border: none;
+    color: #888;
+    padding: 6px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #netTypePopup .cancel-row button:hover { color: #eee; }
+  /* ---- Cable mode hint ---- */
+  #cableMode {
+    position: fixed;
+    bottom: 42px; right: 340px;
+    display: none;
+    background: #16213e;
+    border: 1px solid #1a4a7a;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #888;
+    z-index: 100;
+  }
+  #cableMode.active {
+    display: block;
+    color: #e94560;
+    border-color: #e94560;
+  }
+  #moveMode {
+    position: fixed;
+    bottom: 42px; right: 340px;
+    display: none;
+    background: #16213e;
+    border: 1px solid #1a4a7a;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #888;
+    z-index: 100;
+  }
+  #moveMode.active {
+    display: block;
+    color: #2a8a4a;
+    border-color: #2a8a4a;
+  }
+  /* ---- Hover info ---- */
+  #hoverInfo {
+    position: fixed;
+    display: none;
+    bottom: 42px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(22,33,62,0.9);
+    border: 1px solid #1a4a7a;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: #888;
+    z-index: 100;
+    pointer-events: none;
+    text-align: center;
+  }
+  #hoverInfo.visible { display: block; }
+  /* ---- Modal ---- */
+  #modalOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+  }
+  #modalOverlay.open { display: flex; }
+  #modalBox {
+    background: rgba(22,33,62,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(26,74,122,0.4);
+    border-radius: 12px;
+    padding: 24px;
+    min-width: 400px;
+    max-width: 500px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(233,69,96,0.1);
+  }
+  #modalBox h3 { font-size: 16px; color: #e94560; margin-bottom: 16px; }
+  #modalBox .field { margin-bottom: 12px; }
+  #modalBox .field label {
+    display: block;
+    font-size: 12px;
+    color: #888;
+    margin-bottom: 3px;
+  }
+  #modalBox .field input,
+  #modalBox .field select {
+    width: 100%;
+    padding: 8px 10px;
+    background: #0d1b36;
+    border: 1px solid #1a4a7a;
+    border-radius: 4px;
+    color: #eee;
+    font-size: 14px;
+  }
+  #modalBox .field select option { background: #0d1b36; }
+  #modalBox .btn-row {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+  #modalBox .btn-row button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  #modalBox .btn-row button.primary { background: #e94560; color: #fff; }
+  #modalBox .btn-row button.primary:hover { background: #ff5570; }
+  #modalBox .btn-row button.secondary { background: #1a4a7a; color: #ddd; }
+  #modalBox .btn-row button.secondary:hover { background: #2a5a9a; }
+  #modalBox .btn-row button.danger { background: #6b1a2a; color: #ddd; }
+  #modalBox .btn-row button.danger:hover { background: #8a2a3a; }
+  /* ---- Scrollbar ---- */
+  #sidePanel::-webkit-scrollbar { width: 6px; }
+  #sidePanel::-webkit-scrollbar-track { background: #0d1b36; }
+  #sidePanel::-webkit-scrollbar-thumb { background: #1a4a7a; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <span class="title">📡 Rack3D <small>3D 机柜可视�?/small></span>
+  <button onclick="addRack()">�?添加机柜</button>
+  <button onclick="addRack(8)" style="background:#2a5a3a;">📦 小机�?8U)</button>
+  <button onclick="toggleCableMode()" id="cableBtn">🔌 连线</button>
+  <button onclick="toggleMoveMode()" id="moveBtn">📦 移动</button>
+  <div class="sep"></div>
+  <button onclick="exportData()">💾 导出</button>
+  <button onclick="importData()">📂 导入</button>
+  <div class="sep"></div>
+  <button onclick="deleteRack()">🗑�?删除机柜</button>
+  <button class="danger" onclick="clearAll()">💣 清空</button>
+  <button onclick="toggleLabels()" id="labelBtn">🏷�?标签</button>
+  <div class="sep"></div>
+  <button onclick="startPlaceAntenna()" style="background:#2a6a3a;">📡 放置天线</button>
+  <span class="hint">🖱 左键旋转 · 滚轮缩放 · 点击空位添加 · <b style="color:#e94560;">「移动」模式拖�?/b> · Enter确认 · Esc取消</span>
+</div>
+
+<!-- 3D Viewport -->
+<div id="viewport"></div>
+
+<!-- Side Panel -->
+<div id="sidePanel">
+  <div id="panelContent"></div>
+</div>
+
+<!-- Cable mode hint -->
+<div id="cableMode">🔌 连线模式 - 依次点击两个设备，选择网络类型</div>
+<div id="moveMode">📦 移动模式 - 左键点击机柜/天线并拖动来调整位置</div>
+<div id="hoverInfo">💡 �?Esc 取消选中 / 取消过滤</div>
+<div id="antennaHint" style="position:fixed;bottom:72px;right:20px;display:none;background:#16213e;border:1px solid #00E676;border-radius:4px;padding:6px 10px;font-size:11px;color:#00E676;z-index:100;">📡 点击场景地面放置天线</div>
+
+<!-- Status bar -->
+<div id="status">
+  <span id="rackCount">机柜: 0</span>
+  <span id="devCount">设备: 0</span>
+  <span id="connCount">连接: 0</span>
+  <span id="saveStatus">💾 已保�?/span>
+</div>
+
+<!-- Context Menu (右击菜单) -->
+<div id="contextMenu" style="display:none;position:fixed;z-index:500;background:rgba(22,33,62,0.92);backdrop-filter:blur(12px);border:1px solid rgba(26,74,122,0.4);border-radius:8px;padding:4px 0;min-width:160px;box-shadow:0 4px 24px rgba(0,0,0,0.5);">
+  <div id="ctxMenuItems"></div>
+</div>
+
+<!-- Network Type Popup -->
+<div id="netTypePopup">
+  <h3>🔌 选择网络类型</h3>
+  <div id="netTypeButtons"></div>
+  <div class="cancel-row"><button onclick="cancelNetType()">取消连线</button></div>
+</div>
+
+<!-- Edit Modal -->
+<div id="modalOverlay">
+  <div id="modalBox">
+    <h3 id="modalTitle">编辑设备</h3>
+    <div class="field">
+      <label>设备名称</label>
+      <input type="text" id="fName" placeholder="�? 核心交换�?>
+    </div>
+    <div class="field">
+      <label>IP 地址</label>
+      <input type="text" id="fIP" placeholder="�? 192.168.1.1">
+    </div>
+    <div class="field">
+      <label>设备类型</label>
+      <select id="fType" onchange="onTypeChange()">
+        <option value="server">🖥�?服务�?/option>
+        <option value="switch">🔀 交换�?/option>
+        <option value="router">🌐 路由�?/option>
+        <option value="cross_net">🔄 跨网访问设备</option>
+        <option value="linkway">🔁 LinkWay交换�?/option>
+        <option value="antenna">📡 天线/转发�?/option>
+        <option value="firewall">🛡�?防火�?/option>
+        <option value="storage">💾 存储设备</option>
+        <option value="ups">🔋 UPS</option>
+        <option value="patch">🔌 配线�?/option>
+        <option value="custom">📦 自定义模�?/option>
+        <option value="other">📦 其他</option>
+      </select>
+    </div>
+    <div class="field" id="customNameField" style="display:none;">
+      <label>自定义模块名�?/label>
+      <input type="text" id="fCustomName" placeholder="�? 加密机、KVM切换�?..">
+    </div>
+    <div class="field">
+      <label>U 位高�?/label>
+      <input type="number" id="fHeight" value="1" min="1" max="10" style="width:80px">
+      <span style="font-size:11px;color:#666;margin-left:6px;">U</span>
+    </div>
+    <div class="field">
+      <label>备注</label>
+      <input type="text" id="fNotes" placeholder="可选备注信�?>
+    </div>
+    <div class="btn-row">
+      <button class="danger" id="btnDelete" onclick="deleteDevice()">🗑�?删除</button>
+      <button class="secondary" onclick="closeModal()">取消</button>
+      <button class="primary" onclick="saveDevice()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ==================== DATA ====================
+const data = {
+  racks: [],
+  connections: [],
+  nextRackId: 1,
+  nextDevId: 1,
+  nextConnId: 1,
+  selectedRackId: null,
+  selectedDeviceId: null,
+  cableMode: false,
+  cableFirstId: null,
+  moveMode: false,
+  // Filter state
+  filterNetwork: {
+    '安全�?: true,
+    '联合�?: true,
+    '可靠�?: true,
+    '非密�?: true,
+  },
+  // Highlight state
+  highlightConnId: null,
+  highlightDeviceId: null,
+  // Label visibility
+  showLabels: true,
+  // Hover state for label hover-show
+  hoveredDeviceId: null,
+};
+
+// ==================== CONSTANTS ====================
+const NETWORK_TYPES = {
+  '安全�?: { color: '#FF4444', label: '🛡�?安全�? },
+  '联合�?: { color: '#4488FF', label: '🔗 联合�? },
+  '可靠�?: { color: '#44CC44', label: '�?可靠�? },
+  '非密�?: { color: '#FF8800', label: '📡 非密�? },
+};
+const NETWORK_NAMES = ['安全�?, '联合�?, '可靠�?, '非密�?];
+
+const TYPE_COLORS = {
+  server:      '#4CAF50',
+  switch:      '#2196F3',
+  router:      '#FF9800',
+  firewall:    '#F44336',
+  storage:     '#9C27B0',
+  ups:         '#FFEB3B',
+  patch:       '#607D8B',
+  cross_net:   '#E91E63',   // 跨网访问设备
+  linkway:     '#00BCD4',   // LinkWay交换�?
+  antenna:     '#00E676',   // 天线/转发�?
+  custom:      '#AAAAAA',   // 自定义模�?
+  other:       '#795548',
+};
+const TYPE_NAMES = {
+  server:      '🖥�?服务�?,
+  switch:      '🔀 交换�?,
+  router:      '🌐 路由�?,
+  firewall:    '🛡�?防火�?,
+  storage:     '💾 存储设备',
+  ups:         '🔋 UPS',
+  patch:       '🔌 配线�?,
+  cross_net:   '🔄 跨网访问设备',
+  linkway:     '🔁 LinkWay交换�?,
+  antenna:     '📡 天线/转发�?,
+  custom:      '📦 自定义模�?,
+  other:       '📦 其他',
+};
+
+const U_HEIGHT = 1.0;
+const RACK_WIDTH = 5.6;
+const RACK_DEPTH = 3.0;
+const DEVICE_WIDTH = 5.0;
+const DEVICE_DEPTH = 2.6;
+const RACK_PADDING = 0.3;
+
+// ==================== THREE.JS SETUP ====================
+const viewport = document.getElementById('viewport');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1e);
+  // Add a big watermark to confirm new version
+  const watermarkDiv = document.createElement('div');
+  watermarkDiv.id = 'versionBadge';
+  watermarkDiv.textContent = '�?v0.9 独立天线放置';
+  watermarkDiv.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:9999;color:#e94560;font-size:14px;font-weight:bold;background:rgba(22,33,62,0.7);backdrop-filter:blur(8px);padding:6px 18px;border-radius:8px;border:1px solid rgba(233,69,96,0.3);letter-spacing:1px;';
+  document.body.appendChild(watermarkDiv);
+
+const camera = new THREE.PerspectiveCamera(45, viewport.clientWidth / viewport.clientHeight, 0.1, 1000);
+camera.position.set(18, 8, 28);
+camera.lookAt(0, 6, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(viewport.clientWidth, viewport.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+viewport.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(viewport.clientWidth, viewport.clientHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+viewport.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 15, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 5;
+controls.maxDistance = 120;
+controls.maxPolarAngle = Math.PI / 1.8;
+controls.mouseButtons.RIGHT = null; // Disable right-click pan, we use it for dragging
+controls.touches = { ONE: THREE.TOUCH.ROTATE_PAN, TWO: THREE.TOUCH.DOLLY_PAN };
+controls.update();
+
+const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambientLight);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.8);
+dirLight.position.set(15, 30, 20);
+dirLight.castShadow = true;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
+scene.add(dirLight);
+const fillLight = new THREE.DirectionalLight(0x4488ff, 0.4);
+fillLight.position.set(-10, 10, -15);
+scene.add(fillLight);
+const backLight = new THREE.DirectionalLight(0x4466aa, 0.3);
+backLight.position.set(0, 5, -20);
+scene.add(backLight);
+
+// Anti-static floor tiles
+const tileSize = 2.0;
+const tileGroup = new THREE.Group();
+const tileMat = new THREE.MeshStandardMaterial({
+  color: 0x1a2540,
+  roughness: 0.8,
+  metalness: 0.05,
+  transparent: true,
+  opacity: 0.6,
+  side: THREE.DoubleSide
+});
+const tileLineMat = new THREE.LineBasicMaterial({ color: 0x2a3a5a, transparent: true, opacity: 0.15 });
+for (let x = -40; x < 40; x += tileSize) {
+  for (let z = -40; z < 40; z += tileSize) {
+    const tile = new THREE.Mesh(new THREE.PlaneGeometry(tileSize - 0.03, tileSize - 0.03), tileMat);
+    tile.rotation.x = -Math.PI / 2;
+    tile.position.set(x + tileSize/2, -0.04, z + tileSize/2);
+    tile.receiveShadow = true;
+    tileGroup.add(tile);
+  }
+}
+scene.add(tileGroup);
+
+const gridHelper = new THREE.GridHelper(80, 50, 0x1a4a7a, 0x0d2a4a);
+gridHelper.position.y = -0.03;
+scene.add(gridHelper);
+
+// Subtle glow ring under racks
+const glowGeo = new THREE.RingGeometry(12, 18, 64);
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0x4488ff,
+  transparent: true,
+  opacity: 0.04,
+  side: THREE.DoubleSide
+});
+const glowRing = new THREE.Mesh(glowGeo, glowMat);
+glowRing.rotation.x = -Math.PI / 2;
+glowRing.position.y = -0.02;
+scene.add(glowRing);
+
+const rackGroup = new THREE.Group();
+scene.add(rackGroup);
+const connectionGroup = new THREE.Group();
+scene.add(connectionGroup);
+
+const devMeshes = new Map(); // deviceId �?{ group, mesh, body, label, data }
+const connMeshes = new Map(); // connId �?{ group, mesh, data }
+
+// ==================== RACK BUILDING ====================
+function buildRack(rackData) {
+  const g = new THREE.Group();
+  g.userData.rackId = rackData.id;
+  const slots = rackData.slots || 40;
+  const totalHeight = slots * U_HEIGHT + RACK_PADDING * 2;
+
+  const pillarMat = new THREE.MeshStandardMaterial({ color: 0x2a3a5a, roughness: 0.6, metalness: 0.3 });
+  const pw = 0.12, pd = 0.12;
+  for (const [dx, dz] of [[-1,1],[1,1],[1,-1],[-1,-1]]) {
+    const px = dx * (RACK_WIDTH/2 - pw/2);
+    const pz = dz * (RACK_DEPTH/2 - pd/2);
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(pw, totalHeight, pd), pillarMat);
+    pillar.position.set(px, totalHeight/2, pz);
+    pillar.castShadow = true;
+    g.add(pillar);
+  }
+
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.7, metalness: 0.2 });
+  const pt = new THREE.Mesh(new THREE.BoxGeometry(RACK_WIDTH, 0.1, RACK_DEPTH), panelMat);
+  pt.position.set(0, totalHeight, 0); pt.castShadow = true; g.add(pt);
+  const pb = new THREE.Mesh(new THREE.BoxGeometry(RACK_WIDTH, 0.1, RACK_DEPTH), panelMat);
+  pb.position.set(0, 0, 0); pb.castShadow = true; g.add(pb);
+
+  const sideMat = new THREE.MeshStandardMaterial({ color: 0x1f2a4a, roughness: 0.8, metalness: 0.1, transparent: true, opacity: 0.12, side: THREE.DoubleSide });
+  const sl = new THREE.Mesh(new THREE.BoxGeometry(0.05, totalHeight, RACK_DEPTH), sideMat);
+  sl.position.set(-RACK_WIDTH/2, totalHeight/2, 0); g.add(sl);
+  const sr = new THREE.Mesh(new THREE.BoxGeometry(0.05, totalHeight, RACK_DEPTH), sideMat);
+  sr.position.set(RACK_WIDTH/2, totalHeight/2, 0); g.add(sr);
+
+  const backMat = new THREE.MeshStandardMaterial({ color: 0x1a2a3a, roughness: 0.9, transparent: true, opacity: 0.06, side: THREE.DoubleSide });
+  const back = new THREE.Mesh(new THREE.BoxGeometry(RACK_WIDTH, totalHeight, 0.05), backMat);
+  back.position.set(0, totalHeight/2, -RACK_DEPTH/2); g.add(back);
+
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x2a4a6a, transparent: true, opacity: 0.35 });
+  for (let i = 0; i <= slots; i++) {
+    const y = i * U_HEIGHT + RACK_PADDING;
+    const pts = [new THREE.Vector3(-RACK_WIDTH/2 + 0.2, y, RACK_DEPTH/2 + 0.01), new THREE.Vector3(RACK_WIDTH/2 - 0.2, y, RACK_DEPTH/2 + 0.01)];
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const line = new THREE.Line(geo, i % 5 === 0 ? new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.55 }) : lineMat);
+    g.add(line);
+  }
+
+  for (let i = 1; i <= slots; i += 5) {
+    const y = (i - 0.5) * U_HEIGHT + RACK_PADDING;
+    const div = document.createElement('div');
+    div.textContent = `${i}U`;
+    div.style.color = '#4a6a8a'; div.style.fontSize = '9px'; div.style.fontFamily = 'monospace';
+    div.style.textShadow = '0 1px 3px rgba(0,0,0,0.8)';
+    const label = new CSS2DObject(div);
+    label.position.set(-RACK_WIDTH/2 - 0.3, y, RACK_DEPTH/2 + 0.3);
+    if (i === 1) label.position.y = RACK_PADDING + 0.3;
+    g.add(label);
+  }
+
+  const nameDiv = document.createElement('div');
+  nameDiv.textContent = rackData.name || `机柜 #${rackData.id}`;
+  nameDiv.style.color = '#8ab4e6'; nameDiv.style.fontSize = '14px'; nameDiv.style.fontWeight = 'bold';
+  nameDiv.style.fontFamily = '"Microsoft YaHei", sans-serif';
+  nameDiv.style.textShadow = '0 2px 8px rgba(0,0,0,0.9)';
+  nameDiv.style.background = 'rgba(22,33,62,0.8)'; nameDiv.style.padding = '4px 12px';
+  nameDiv.style.borderRadius = '4px'; nameDiv.style.border = '1px solid #1a4a7a';
+  const nameLabel = new CSS2DObject(nameDiv);
+  nameLabel.position.set(0, totalHeight + 0.5, RACK_DEPTH/2 + 0.5);
+  g.add(nameLabel);
+
+  return g;
+}
+
+// ==================== DEVICE BUILDING ====================
+function buildDeviceMesh(device, slotIndex, rackData) {
+  const h = (device.height || 1) * U_HEIGHT - 0.06;
+  const w = DEVICE_WIDTH;
+  const d = DEVICE_DEPTH;
+  const colorIdx = device.color || TYPE_COLORS[device.type] || '#795548';
+  const mainColor = new THREE.Color(colorIdx);
+  const darkColor = new THREE.Color(0x1a1a2e);
+
+  const group = new THREE.Group();
+  const type = device.type || 'other';
+
+  // Shared helper: front plate with branding bar
+  function addFrontPlate(bodyMat, plateColor) {
+    const frontMat = bodyMat.clone();
+    frontMat.metalness = 0.15;
+    frontMat.roughness = 0.6;
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(w - 0.08, h - 0.04, 0.02), frontMat);
+    plate.position.z = d/2 + 0.005;
+    group.add(plate);
+    // Branding bar at top
+    const brandMat = new THREE.MeshStandardMaterial({
+      color: plateColor || mainColor,
+      roughness: 0.3, metalness: 0.2,
+      emissive: plateColor || mainColor,
+      emissiveIntensity: 0.06
+    });
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(w - 1.2, 0.06, 0.025), brandMat);
+    bar.position.set(0, h/2 - 0.05, d/2 + 0.016);
+    group.add(bar);
+    return plate;
+  }
+
+  // ============ SERVER ============
+  if (type === 'server') {
+    // Colorful chassis (use device type color)
+    const chassisMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.4, metalness: 0.3,
+      emissive: mainColor, emissiveIntensity: 0.06
+    });
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), chassisMat);
+    chassis.castShadow = true; chassis.receiveShadow = true;
+    group.add(chassis);
+
+    // Lighter front bezel
+    const bezelMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.2), roughness: 0.35, metalness: 0.25,
+      emissive: mainColor, emissiveIntensity: 0.04
+    });
+    const bezel = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, h - 0.03, 0.03), bezelMat);
+    bezel.position.z = d/2 - 0.01;
+    group.add(bezel);
+
+    // Drive bays (2.5" drives) - dark but visible on colored body
+    const driveCount = Math.min(Math.floor((h - 0.15) / 0.25), 6);
+    const driveMat = new THREE.MeshStandardMaterial({
+      color: 0x222233, roughness: 0.7, metalness: 0.2
+    });
+    for (let i = 0; i < driveCount; i++) {
+      const yOff = -h/2 + 0.12 + i * 0.25 + 0.08;
+      // Drive caddy
+      const caddy = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.025), driveMat);
+      caddy.position.set(-1.1, yOff, d/2 + 0.005);
+      group.add(caddy);
+      const caddy2 = caddy.clone();
+      caddy2.position.x = 0;
+      group.add(caddy2);
+      const caddy3 = caddy.clone();
+      caddy3.position.x = 1.1;
+      group.add(caddy3);
+      // Drive LED
+      if (i < 4) {
+        const ledDot = new THREE.Mesh(new THREE.CircleGeometry(0.018, 6), new THREE.MeshStandardMaterial({
+          color: 0x00ff66, emissive: 0x00ff66, emissiveIntensity: 0.15 + Math.random()*0.1
+        }));
+        ledDot.position.set(1.4, yOff, d/2 + 0.016);
+        group.add(ledDot);
+      }
+    }
+
+    // Top accent strip (bright)
+    const stripMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.4), roughness: 0.2, metalness: 0.1,
+      emissive: mainColor, emissiveIntensity: 0.1
+    });
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(w - 0.4, 0.04, 0.02), stripMat);
+    strip.position.set(0, h/2 - 0.04, d/2 + 0.006);
+    group.add(strip);
+
+    // Air vents on side
+    const ventMat2 = new THREE.MeshStandardMaterial({
+      color: 0x0a0a14, roughness: 0.9, metalness: 0.0
+    });
+    for (const sx of [-1, 1]) {
+      for (let i = 0; i < 4; i++) {
+        const slot = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.6, 0.08), ventMat2);
+        slot.position.set(sx * w/2, -h/4 + i * 0.25, -d/4);
+        group.add(slot);
+      }
+    }
+
+  // ============ SWITCH / LINKWAY ============
+  } else if (type === 'switch' || type === 'linkway') {
+    const isLink = type === 'linkway';
+    // Body - use device color
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.3, metalness: 0.3,
+      emissive: mainColor, emissiveIntensity: 0.06
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d * 0.75), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // Front faceplate (slightly brighter)
+    const faceMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.15), roughness: 0.3, metalness: 0.2,
+      emissive: mainColor, emissiveIntensity: 0.04
+    });
+    const face = new THREE.Mesh(new THREE.BoxGeometry(w - 0.06, h - 0.04, 0.025), faceMat);
+    face.position.z = d * 0.75/2 + 0.005;
+    group.add(face);
+
+    // RJ45 port rows (2 rows)
+    const portMat2 = new THREE.MeshStandardMaterial({
+      color: 0x1a1a2a, roughness: 0.8, metalness: 0.1
+    });
+    const portBodyMat = new THREE.MeshStandardMaterial({
+      color: 0x33334a, roughness: 0.5, metalness: 0.2
+    });
+    const portsPerRow = Math.min(Math.floor((w - 0.6) / 0.16), 24);
+    for (let row = 0; row < 2; row++) {
+      const yOff = -h/4 + 0.06 + row * (h/2 - 0.15);
+      for (let i = 0; i < portsPerRow; i++) {
+        const xOff = -w/2 + 0.25 + i * 0.16;
+        // Port body
+        const pb = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.055, 0.02), portBodyMat);
+        pb.position.set(xOff, yOff, d * 0.75/2 + 0.016);
+        group.add(pb);
+        // Port hole
+        const ph = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.025, 0.015), portMat2);
+        ph.position.set(xOff, yOff, d * 0.75/2 + 0.022);
+        group.add(ph);
+      }
+    }
+
+    // Status LEDs (bottom row)
+    for (let i = 0; i < Math.min(portsPerRow, 8); i++) {
+      const xOff = -w/2 + 0.25 + i * 0.4;
+      const ledC = new THREE.MeshStandardMaterial({
+        color: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
+        emissive: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
+        emissiveIntensity: 0.12
+      });
+      const ld = new THREE.Mesh(new THREE.CircleGeometry(0.018, 6), ledC);
+      ld.position.set(xOff, -h/2 + 0.06, d * 0.75/2 + 0.023);
+      group.add(ld);
+    }
+
+    // Side vents
+    const svMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0a14, roughness: 0.9, metalness: 0.0
+    });
+    for (const sx of [-1, 1]) {
+      for (let i = 0; i < 6; i++) {
+        const sl = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.08, 0.05), svMat);
+        sl.position.set(sx * w/2, -h/3 + i * 0.12, -d/5);
+        group.add(sl);
+      }
+    }
+
+    // Accent bar at top (brighter)
+    const accentMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.3), roughness: 0.15, metalness: 0.1,
+      emissive: mainColor, emissiveIntensity: 0.12
+    });
+    const accent = new THREE.Mesh(new THREE.BoxGeometry(w - 0.3, 0.04, 0.02), accentMat);
+    accent.position.set(0, h/2 - 0.04, d * 0.75/2 + 0.012);
+    group.add(accent);
+
+  // ============ ROUTER ============
+  } else if (type === 'router') {
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.25, metalness: 0.4,
+      emissive: mainColor, emissiveIntensity: 0.08
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h * 0.7, d), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    body.position.y = h * 0.08;
+    group.add(body);
+
+    // Raised top section (brighter)
+    const topMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.2), roughness: 0.2, metalness: 0.3,
+      emissive: mainColor, emissiveIntensity: 0.1
+    });
+    const top = new THREE.Mesh(new THREE.BoxGeometry(w - 0.8, 0.08, d - 0.8), topMat);
+    top.position.set(0, h * 0.75/2 + 0.04, 0);
+    group.add(top);
+
+    // Front port panel
+    const panelMat2 = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.1), roughness: 0.35, metalness: 0.2
+    });
+    const pnl = new THREE.Mesh(new THREE.BoxGeometry(w - 0.1, 0.2, 0.025), panelMat2);
+    pnl.position.set(0, -h * 0.2, d/2 + 0.005);
+    group.add(pnl);
+
+    // Ports
+    const portMat3 = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.8 });
+    for (let i = 0; i < 4; i++) {
+      const pt = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.015), portMat3);
+      pt.position.set(-0.6 + i * 0.4, -h * 0.2, d/2 + 0.02);
+      group.add(pt);
+    }
+
+    // Side fins (heat sink)
+    const finMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(0.8), roughness: 0.5, metalness: 0.3
+    });
+    for (const sx of [-1, 1]) {
+      for (let i = 0; i < 5; i++) {
+        const fin = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.04, d - 0.3), finMat);
+        fin.position.set(sx * w/2, -h/4 + i * 0.1, 0);
+        group.add(fin);
+      }
+    }
+
+  // ============ CROSS-NET ============
+  } else if (type === 'cross_net') {
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.3, metalness: 0.3,
+      emissive: mainColor, emissiveIntensity: 0.08
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // X-shaped front accent (bright)
+    const xMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.4), roughness: 0.1, metalness: 0.2,
+      emissive: mainColor, emissiveIntensity: 0.3,
+      transparent: true, opacity: 0.7
+    });
+    const x1 = new THREE.Mesh(new THREE.BoxGeometry(w - 0.3, 0.04, 0.025), xMat);
+    x1.position.set(0, 0, d/2 + 0.006);
+    x1.rotation.z = 0.4;
+    group.add(x1);
+    const x2 = new THREE.Mesh(new THREE.BoxGeometry(w - 0.3, 0.04, 0.025), xMat.clone());
+    x2.position.set(0, 0, d/2 + 0.006);
+    x2.rotation.z = -0.4;
+    group.add(x2);
+
+    // Glowing center dot
+    const centerMat = new THREE.MeshStandardMaterial({
+      color: mainColor, emissive: mainColor, emissiveIntensity: 0.3
+    });
+    const center = new THREE.Mesh(new THREE.CircleGeometry(0.07, 16), centerMat);
+    center.position.set(0, 0, d/2 + 0.018);
+    group.add(center);
+
+    // Ports on bottom
+    const portMat4 = new THREE.MeshStandardMaterial({ color: 0x222244, roughness: 0.8 });
+    for (let i = 0; i < 4; i++) {
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.015), portMat4);
+      p.position.set(-0.45 + i * 0.3, -h/3, d/2 + 0.01);
+      group.add(p);
+    }
+
+  // ============ UPS ============
+  } else if (type === 'ups') {
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.35, metalness: 0.3,
+      emissive: mainColor, emissiveIntensity: 0.06
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // LCD screen
+    const screenMat = new THREE.MeshStandardMaterial({
+      color: 0x004488, emissive: 0x0088ff,
+      emissiveIntensity: 0.2, roughness: 0.1
+    });
+    const screen = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.3, 0.02), screenMat);
+    screen.position.set(0, h/4, d/2 + 0.006);
+    group.add(screen);
+
+    // Screen text (little dots)
+    for (let i = 0; i < 6; i++) {
+      const dotMat = new THREE.MeshStandardMaterial({
+        color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.15
+      });
+      const dt = new THREE.Mesh(new THREE.CircleGeometry(0.015, 6), dotMat);
+      dt.position.set(-0.5 + i * 0.2, h/4 + 0.05, d/2 + 0.018);
+      group.add(dt);
+    }
+
+    // Battery bars
+    for (let i = 0; i < 5; i++) {
+      const barMat = new THREE.MeshStandardMaterial({
+        color: i < 3 ? 0x00cc44 : (i < 4 ? 0xffaa00 : 0xff4422),
+        emissive: i < 3 ? 0x00cc44 : (i < 4 ? 0xffaa00 : 0xff4422),
+        emissiveIntensity: 0.12
+      });
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.015), barMat);
+      bar.position.set(-0.6 + i * 0.3, -h/4, d/2 + 0.012);
+      group.add(bar);
+    }
+
+    // Power outlet on top
+    const outMat = new THREE.MeshStandardMaterial({ color: 0x333344, roughness: 0.8 });
+    for (let i = 0; i < 2; i++) {
+      const out = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.015), outMat);
+      out.position.set(-0.3 + i * 0.6, h/2 - 0.06, 0);
+      group.add(out);
+    }
+
+  // ============ FIREWALL ============
+  } else if (type === 'firewall') {
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.25, metalness: 0.35,
+      emissive: mainColor, emissiveIntensity: 0.08
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // Shield icon on front (brighter)
+    const shieldMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.3), roughness: 0.1, metalness: 0.15,
+      emissive: mainColor, emissiveIntensity: 0.2
+    });
+    const shield = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.4, 0.02), shieldMat);
+    shield.position.set(0, 0.1, d/2 + 0.006);
+    group.add(shield);
+    const shieldInner = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.025), new THREE.MeshStandardMaterial({
+      color: 0x004488, emissive: 0x00aaff, emissiveIntensity: 0.15
+    }));
+    shieldInner.position.set(0, 0.1, d/2 + 0.017);
+    group.add(shieldInner);
+
+    // Ports
+    const pm = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, roughness: 0.8 });
+    for (let i = 0; i < 4; i++) {
+      const p = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.012), pm);
+      p.position.set(-0.6 + i * 0.4, -h/3, d/2 + 0.008);
+      group.add(p);
+    }
+
+  // ============ ANTENNA / 转发�?============
+  } else if (type === 'antenna') {
+    // ========== 室外单元天线 / 转发�?==========
+    // 三脚�?legs (三根斜腿)
+    const legMat = new THREE.MeshStandardMaterial({
+      color: 0x8899aa, roughness: 0.4, metalness: 0.5
+    });
+    const legAngle = 0.25;
+    for (let i = 0; i < 3; i++) {
+      const angle = (i / 3) * Math.PI * 2;
+      const lx = Math.cos(angle) * 0.6;
+      const lz = Math.sin(angle) * 0.5;
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, h * 0.5, 6), legMat);
+      leg.position.set(lx * 0.3, -h/2 + h * 0.25, lz * 0.3);
+      leg.rotation.z = Math.cos(angle) * legAngle;
+      leg.rotation.x = Math.sin(angle) * legAngle;
+      group.add(leg);
+      // Little foot pad
+      const footMat = new THREE.MeshStandardMaterial({ color: 0x555566, roughness: 0.8 });
+      const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.025, 6), footMat);
+      foot.position.set(lx * 0.55, -h/2 + 0.01, lz * 0.55);
+      group.add(foot);
+    }
+
+    // ===== Main body (host unit) on top of tripod =====
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.3, metalness: 0.35,
+      emissive: mainColor, emissiveIntensity: 0.06
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, h * 0.35, d * 0.6), bodyMat);
+    body.position.y = h * 0.02;
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // Front panel (slightly brighter)
+    const panelMat = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.15), roughness: 0.25, metalness: 0.2
+    });
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(w * 0.6, h * 0.25, 0.02), panelMat);
+    panel.position.set(0, h * 0.02, d * 0.6/2 + 0.005);
+    group.add(panel);
+
+    // RF connector port on front
+    const connMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.7, metalness: 0.3 });
+    const nType = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.04, 8), connMat);
+    nType.rotation.x = Math.PI / 2;
+    nType.position.set(0.2, h * 0.02, d * 0.6/2 + 0.022);
+    group.add(nType);
+    const nType2 = nType.clone();
+    nType2.position.set(-0.2, h * 0.02, d * 0.6/2 + 0.022);
+    group.add(nType2);
+
+    // Antenna feed horn (small cone + tip sticking out front)
+    const hornMat = new THREE.MeshStandardMaterial({
+      color: 0xccccdd, roughness: 0.15, metalness: 0.6
+    });
+    const horn = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.12, 8), hornMat);
+    horn.rotation.x = -Math.PI / 2;
+    horn.position.set(0, h * 0.02, d * 0.6/2 + 0.06);
+    group.add(horn);
+
+    // Glow tip (LNB emitter)
+    const tipMat = new THREE.MeshStandardMaterial({
+      color: 0x00ffaa, emissive: 0x00ffaa, emissiveIntensity: 0.35
+    });
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 8), tipMat);
+    tip.position.set(0, h * 0.02, d * 0.6/2 + 0.12);
+    group.add(tip);
+
+    // Signal ring waves in front
+    const waveMat = new THREE.LineBasicMaterial({
+      color: 0x00ffaa, transparent: true, opacity: 0.2
+    });
+    for (let i = 0; i < 3; i++) {
+      const r = 0.08 + i * 0.08;
+      const pts = [];
+      for (let a = -0.8; a <= 0.8; a += 0.05) {
+        pts.push(new THREE.Vector3(
+          Math.sin(a) * r,
+          h * 0.02 + (Math.cos(a) - 1) * r * 0.4,
+          d * 0.6/2 + 0.12 + i * 0.04
+        ));
+      }
+      const wg = new THREE.BufferGeometry().setFromPoints(pts);
+      const wl = new THREE.Line(wg, waveMat.clone());
+      group.add(wl);
+    }
+
+    // Status LED on body
+    const ledMat = new THREE.MeshStandardMaterial({
+      color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.25
+    });
+    const led = new THREE.Mesh(new THREE.CircleGeometry(0.03, 8), ledMat);
+    led.position.set(w * 0.7/2 - 0.1, h * 0.02 + 0.05, d * 0.6/2 + 0.01);
+    group.add(led);
+
+  // ============ CUSTOM / OTHER / DEFAULT ============
+  } else {
+    // Default: colored body
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: mainColor, roughness: 0.3, metalness: 0.35,
+      emissive: mainColor, emissiveIntensity: 0.06
+    });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), bodyMat);
+    body.castShadow = true; body.receiveShadow = true;
+    group.add(body);
+
+    // Front accent (brighter stripe)
+    const accentMat2 = new THREE.MeshStandardMaterial({
+      color: mainColor.clone().multiplyScalar(1.3), roughness: 0.15, metalness: 0.15,
+      emissive: mainColor, emissiveIntensity: 0.12
+    });
+    const accent2 = new THREE.Mesh(new THREE.BoxGeometry(w - 0.2, 0.08, 0.022), accentMat2);
+    accent2.position.set(0, h/2 - 0.06, d/2 + 0.006);
+    group.add(accent2);
+  }
+
+  // Edge outline (very subtle)
+  const edgeMat = new THREE.LineBasicMaterial({
+    color: 0xffffff, transparent: true, opacity: 0.04
+  });
+  const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(w, h, d));
+  const edgeLine = new THREE.LineSegments(edges, edgeMat);
+  group.add(edgeLine);
+
+  // Power LED (right corner)
+  const powMat = new THREE.MeshStandardMaterial({
+    color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 0.25
+  });
+  const powLed = new THREE.Mesh(new THREE.CircleGeometry(0.03, 8), powMat);
+  powLed.position.set(w/2 - 0.2, h/2 - 0.08, d/2 + 0.016);
+  group.add(powLed);
+  const stsMat = new THREE.MeshStandardMaterial({
+    color: 0xffaa00, emissive: 0xffaa00, emissiveIntensity: 0.15
+  });
+  const stsLed = new THREE.Mesh(new THREE.CircleGeometry(0.03, 8), stsMat);
+  stsLed.position.set(w/2 - 0.32, h/2 - 0.08, d/2 + 0.016);
+  group.add(stsLed);
+
+  // Label with glass effect
+  const ipDisplay = device.ip || '';
+  const labelDiv = document.createElement('div');
+  labelDiv.innerHTML = `<div style="font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.95);background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 8px;border-radius:4px;border-left:2px solid ${colorIdx};white-space:nowrap;">${device.name}${ipDisplay ? '<br><span style="font-size:9px;color:#8ab4e6;font-weight:400;">'+ipDisplay+'</span>':''}</div>`;
+  const label = new CSS2DObject(labelDiv);
+  label.position.set(0, 0, d/2 + 0.35);
+
+  const yPos = RACK_PADDING + slotIndex * U_HEIGHT + h / 2;
+  group.position.set(0, yPos, 0);
+  group.add(label);
+  group.userData.deviceId = device.id;
+
+  return { group, body: group, label };
+}
+
+// ==================== CONNECTIONS ====================
+function buildConnection(conn) {
+  const fromDev = findDevice(conn.from);
+  const toDev = findDevice(conn.to);
+  if (!fromDev || !toDev) return null;
+
+  const fromPos = getDeviceWorldPos(fromDev);
+  const toPos = getDeviceWorldPos(toDev);
+  if (!fromPos || !toPos) return null;
+
+  const netColor = NETWORK_TYPES[conn.networkType]?.color || '#4488ff';
+  const color = new THREE.Color(netColor);
+
+  const mid1 = new THREE.Vector3().lerpVectors(fromPos, toPos, 0.33);
+  const mid2 = new THREE.Vector3().lerpVectors(fromPos, toPos, 0.67);
+  const drop = 0.8 + Math.random() * 0.6;
+  mid1.y -= drop; mid2.y -= drop;
+  const hOff = (Math.random() - 0.5) * 0.5;
+  mid1.x += hOff; mid2.x += hOff;
+
+  const points = [fromPos.clone(), mid1, mid2, toPos.clone()];
+  const curve = new THREE.CatmullRomCurve3(points);
+
+  const tubeMat = new THREE.MeshStandardMaterial({
+    color, roughness: 0.3, metalness: 0.05,
+    emissive: color, emissiveIntensity: 0.25,
+    transparent: true, opacity: 0.9
+  });
+  const tubeGeo = new THREE.TubeGeometry(curve, 24, 0.05, 8, false);
+  const mesh = new THREE.Mesh(tubeGeo, tubeMat);
+  mesh.userData.connId = conn.id;
+  mesh.castShadow = true;
+
+  const dotMat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.2 });
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), dotMat);
+  dot.position.copy(fromPos);
+  const dot2 = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), dotMat.clone());
+  dot2.position.copy(toPos);
+
+  const g = new THREE.Group();
+  g.userData.connId = conn.id;
+  g.userData.networkType = conn.networkType;
+  mesh.userData.connId = conn.id;
+  mesh.userData.networkType = conn.networkType;
+  dot.userData.connId = conn.id;
+  dot2.userData.connId = conn.id;
+  g.add(mesh); g.add(dot); g.add(dot2);
+  return g;
+}
+
+function findDevice(devId) {
+  for (const r of data.racks) for (const d of r.devices) if (d.id === devId) return d;
+  return null;
+}
+
+function getDeviceWorldPos(device) {
+  for (const [id, md] of devMeshes) {
+    if (id === device.id) {
+      const wp = new THREE.Vector3();
+      md.group.getWorldPosition(wp);
+      return wp;
+    }
+  }
+  return null;
+}
+
+
+// ==================== ANTENNA 3D MODEL ====================
+function buildAntennaWorld(antData) {
+  const g = new THREE.Group();
+  g.userData.antennaId = antData.id;
+  const mainColor = new THREE.Color(antData.color || '#00E676');
+  const h = 2.0, w = 1.5, d = 1.2;
+
+  // Tripod legs
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x8899aa, roughness: 0.4, metalness: 0.5 });
+  for (let i = 0; i < 3; i++) {
+    const angle = (i / 3) * Math.PI * 2;
+    const lx = Math.cos(angle) * 0.5, lz = Math.sin(angle) * 0.5;
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.06, h * 0.5, 6), legMat);
+    leg.position.set(lx * 0.3, h * 0.12, lz * 0.3);
+    leg.rotation.z = Math.cos(angle) * 0.2;
+    leg.rotation.x = Math.sin(angle) * 0.2;
+    g.add(leg);
+    const foot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.08, 0.03, 6),
+      new THREE.MeshStandardMaterial({ color: 0x555566, roughness: 0.8 }));
+    foot.position.set(lx * 0.55, 0.015, lz * 0.55);
+    g.add(foot);
+  }
+
+  // Main body
+  const bodyMat = new THREE.MeshStandardMaterial({ color: mainColor, roughness: 0.3, metalness: 0.35, emissive: mainColor, emissiveIntensity: 0.06 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, h * 0.4, d * 0.6), bodyMat);
+  body.position.y = h * 0.4; body.castShadow = true; body.receiveShadow = true;
+  g.add(body);
+
+  // Front panel
+  const panelMat = new THREE.MeshStandardMaterial({ color: mainColor.clone().multiplyScalar(1.15), roughness: 0.25, metalness: 0.2 });
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(w * 0.6, h * 0.3, 0.03), panelMat);
+  panel.position.set(0, h * 0.4, d * 0.6 / 2 + 0.005);
+  g.add(panel);
+
+  // RF connectors
+  const connMat = new THREE.MeshStandardMaterial({ color: 0x333355, roughness: 0.7, metalness: 0.3 });
+  for (const side of [-1, 1]) {
+    const nc = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.05, 8), connMat);
+    nc.rotation.x = Math.PI / 2;
+    nc.position.set(side * 0.2, h * 0.4, d * 0.6 / 2 + 0.027);
+    g.add(nc);
+  }
+
+  // Feed horn
+  const hornMat = new THREE.MeshStandardMaterial({ color: 0xccccdd, roughness: 0.15, metalness: 0.6 });
+  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.15, 8), hornMat);
+  horn.rotation.x = -Math.PI / 2;
+  horn.position.set(0, h * 0.4, d * 0.6 / 2 + 0.08);
+  g.add(horn);
+
+  // Glowing tip
+  const tipMat = new THREE.MeshStandardMaterial({ color: 0x00ffaa, emissive: 0x00ffaa, emissiveIntensity: 0.4 });
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), tipMat);
+  tip.position.set(0, h * 0.4, d * 0.6 / 2 + 0.16);
+  g.add(tip);
+
+  // Signal waves
+  const waveMat = new THREE.LineBasicMaterial({ color: 0x00ffaa, transparent: true, opacity: 0.2 });
+  for (let i = 0; i < 4; i++) {
+    const r = 0.08 + i * 0.1;
+    const pts = [];
+    for (let a = -0.8; a <= 0.8; a += 0.05) {
+      pts.push(new THREE.Vector3(Math.sin(a) * r, h * 0.4 + (Math.cos(a) - 1) * r * 0.4, d * 0.6 / 2 + 0.16 + i * 0.05));
+    }
+    const wl = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), waveMat.clone());
+    g.add(wl);
+  }
+
+  // Name label
+  const labelDiv = document.createElement('div');
+  labelDiv.innerHTML = `<div style="font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.95);background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);padding:3px 10px;border-radius:4px;border-left:2px solid ${antData.color || '#00E676'};white-space:nowrap;">📡 ${antData.name}</div>`;
+  const label = new CSS2DObject(labelDiv);
+  label.position.set(0, h + 0.2, 0);
+  g.add(label);
+
+  g.position.set(antData.position.x, 0, antData.position.z);
+  return g;
+}
+
+
+// ==================== FILTER & HIGHLIGHT ====================
+function applyFilters() {
+  // Update connection visibility based on filter + highlight
+  for (const [connId, cg] of connMeshes) {
+    const conn = data.connections.find(c => c.id === connId);
+    if (!conn) continue;
+    const netType = conn.networkType || '安全�?;
+    const filterOn = data.filterNetwork[netType] !== false;
+
+    // Check highlight
+    let highlighted = true;
+    if (data.highlightConnId !== null) {
+      highlighted = (connId === data.highlightConnId);
+    } else if (data.highlightDeviceId !== null) {
+      highlighted = (conn.from === data.highlightDeviceId || conn.to === data.highlightDeviceId);
+    }
+
+    const visible = filterOn && highlighted;
+    cg.visible = visible;
+
+    // Adjust opacity for dimmed connections
+    cg.traverse(child => {
+      if (child.isMesh && child.material) {
+        if (visible) {
+          child.material.opacity = highlighted ? 0.85 : 0.15;
+        }
+      }
+    });
+  }
+}
+
+function filterByDevice(devId) {
+  if (data.highlightDeviceId === devId) {
+    data.highlightDeviceId = null;
+  } else {
+    data.highlightDeviceId = devId;
+    data.highlightConnId = null;
+  }
+  applyFilters();
+  updatePanel();
+  updateHoverInfo();
+}
+
+function filterByConn(connId) {
+  if (data.highlightConnId === connId) {
+    data.highlightConnId = null;
+  } else {
+    data.highlightConnId = connId;
+    data.highlightDeviceId = null;
+  }
+  applyFilters();
+  updateHoverInfo();
+}
+
+function clearHighlight() {
+  data.highlightConnId = null;
+  data.highlightDeviceId = null;
+  applyFilters();
+  updatePanel();
+  updateHoverInfo();
+}
+
+function updateHoverInfo() {
+  const el = document.getElementById('hoverInfo');
+  if (data.highlightDeviceId !== null) {
+    const dev = findDevice(data.highlightDeviceId);
+    if (dev) {
+      el.textContent = `🔍 查看 ${dev.name} 的连�?- 点击空白处取消过滤`;
+      el.classList.add('visible');
+      return;
+    }
+  }
+  if (data.highlightConnId !== null) {
+    el.textContent = `🔍 查看连接详情 - 再次点击取消高亮`;
+    el.classList.add('visible');
+    return;
+  }
+  el.classList.remove('visible');
+}
+
+function applyLabelVisibility() {
+  for (const [id, md] of devMeshes) {
+    if (md.group) {
+      md.group.traverse(child => {
+        if (child.isCSS2DObject) {
+          // Show if: labels on, OR this is the hovered device
+          child.visible = data.showLabels || (data.hoveredDeviceId === id);
+        }
+      });
+    }
+  }
+}
+
+// ==================== RENDER & REBUILD ====================
+function rebuildScene() {
+  while (rackGroup.children.length) {
+    const c = rackGroup.children[0];
+    if (c.isCSS2DObject && c.element && c.element.parentNode) c.element.parentNode.removeChild(c.element);
+    rackGroup.remove(c);
+  }
+  while (connectionGroup.children.length) {
+    const c = connectionGroup.children[0];
+    connectionGroup.remove(c);
+  }
+  connMeshes.clear();
+  devMeshes.clear();
+
+  for (let ri = 0; ri < data.racks.length; ri++) {
+    const rd = data.racks[ri];
+    const g = buildRack(rd);
+    g.position.x = (rd.position && rd.position.x !== undefined) ? rd.position.x : 0;
+    g.position.z = (rd.position && rd.position.z !== undefined) ? rd.position.z : 0;
+    rackGroup.add(g);
+
+    for (const dev of rd.devices) {
+      const result = buildDeviceMesh(dev, dev.slot - 1, rd);
+      if (result) {
+        g.add(result.group);
+        devMeshes.set(dev.id, result);
+      }
+    }
+  }
+
+
+  // Build antennas (world-space)
+  for (const ant of data.antennas) {
+    const ag = buildAntennaWorld(ant);
+    antennaGroup.add(ag);
+  }
+
+  for (const conn of data.connections) {
+    const cg = buildConnection(conn);
+    if (cg) {
+      connectionGroup.add(cg);
+      connMeshes.set(conn.id, cg);
+    }
+  }
+
+  applyFilters();
+  applyLabelVisibility();
+  updatePanel();
+  updateStatus();
+  saveToStorage();
+}
+
+// ==================== RAYCASTER ====================
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let isPointerDown = false;
+let pointerDownPos = { x: 0, y: 0 };
+
+// Move mode drag state
+let isDraggingRack = false;
+let dragTarget = null;
+let dragRackId = null;
+let dragPlanePoint = new THREE.Vector3();
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const _dragIntersect = new THREE.Vector3();
+
+// Context menu state
+let ctxMenuTarget = null; // { type: 'rack'|'device'|'conn', id: number }
+
+renderer.domElement.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  // Close any open context menu
+  document.getElementById('contextMenu').style.display = 'none';
+  
+  // Raycast to see what we clicked on
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  // Check rack click
+  const ri = raycaster.intersectObjects(rackGroup.children, true);
+  for (const hit of ri) {
+    let obj = hit.object;
+    while (obj.parent && !(obj.parent.userData && obj.parent.userData.rackId) && obj.parent !== rackGroup) obj = obj.parent;
+    if (obj.parent && obj.parent.userData && obj.parent.userData.rackId) {
+      const rackId = obj.parent.userData.rackId;
+      showCtxMenu(e.clientX, e.clientY, 'rack', rackId);
+      return;
+    }
+  }
+
+  // Check device click
+  const devMeshList2 = [];
+  for (const [id, md] of devMeshes) md.group.traverse(c => { if (c.isMesh) devMeshList2.push(c); });
+  const dHits2 = raycaster.intersectObjects(devMeshList2);
+  if (dHits2.length > 0) {
+    let obj = dHits2[0].object;
+    while (obj.parent && !obj.parent.userData.deviceId) obj = obj.parent;
+    if (obj.parent && obj.parent.userData.deviceId) {
+      showCtxMenu(e.clientX, e.clientY, 'device', obj.parent.userData.deviceId);
+      return;
+    }
+  }
+
+  // Check connection click
+  const connMeshList2 = [];
+  for (const [id, cg] of connMeshes) cg.traverse(c => { if (c.isMesh) connMeshList2.push(c); });
+  const cHits2 = raycaster.intersectObjects(connMeshList2);
+  if (cHits2.length > 0) {
+    let obj = cHits2[0].object;
+    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
+    if (obj.parent?.userData?.connId) {
+      showCtxMenu(e.clientX, e.clientY, 'conn', obj.parent.userData.connId);
+      return;
+    }
+  }
+});
+
+// Close context menu on any left click
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  if (e.button === 0) {
+    document.getElementById('contextMenu').style.display = 'none';
+    ctxMenuTarget = null;
+  }
+});
+
+function showCtxMenu(x, y, type, id) {
+  const menu = document.getElementById('contextMenu');
+  const items = document.getElementById('ctxMenuItems');
+  
+  let html = '';
+  if (type === 'rack') {
+    const rack = data.racks.find(r => r.id === id);
+    if (!rack) return;
+    html = `
+      <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">📦 ${rack.name}</div>
+      <div class="ctx-item" onclick="deleteRack(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除机柜</div>
+    `;
+  } else if (type === 'device') {
+    const dev = findDevice(id);
+    if (!dev) return;
+    html = `
+      <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">📟 ${dev.name}</div>
+      <div class="ctx-item" onclick="openEditModal(${id})" style="padding:8px 14px;font-size:13px;color:#eee;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">✏️ 编辑设备</div>
+      <div class="ctx-item" onclick="deleteDevQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除设备</div>
+    `;
+  } else if (type === 'conn') {
+    const conn = data.connections.find(c => c.id === id);
+    if (!conn) return;
+    const from = findDevice(conn.from)?.name || '?';
+    const to = findDevice(conn.to)?.name || '?';
+    html = `
+      <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">🔌 ${from} �?${to}</div>
+      <div class="ctx-item" onclick="deleteConnQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除连线</div>
+    `;
+  }
+  
+  items.innerHTML = html;
+  menu.style.display = 'block';
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  
+  // Keep menu within viewport
+  const vr = viewport.getBoundingClientRect();
+  const mr = menu.getBoundingClientRect();
+  if (mr.right > vr.right) menu.style.left = (x - mr.width) + 'px';
+  if (mr.bottom > vr.bottom) menu.style.top = (y - mr.height) + 'px';
+  
+  ctxMenuTarget = { type, id };
+}
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  // In move mode: left-click on rack to drag
+  if (data.moveMode && e.button === 0) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+
+    const rackMeshList = [];
+    rackGroup.children.forEach(child => {
+      child.traverse(c => { if (c.isMesh) rackMeshList.push(c); });
+    });
+    const hits = raycaster.intersectObjects(rackMeshList);
+    if (hits.length > 0) {
+      let obj = hits[0].object;
+      while (obj.parent && obj.parent !== rackGroup) obj = obj.parent;
+      if (obj.parent === rackGroup) {
+        isDraggingRack = true;
+        dragTarget = obj;
+        dragRackId = obj.userData.rackId;
+        if (raycaster.ray.intersectPlane(dragPlane, dragPlanePoint)) {
+          dragPlanePoint.sub(dragTarget.position);
+        }
+        renderer.domElement.style.cursor = 'grabbing';
+        return;
+      }
+    }
+  }
+
+  isPointerDown = true;
+  pointerDownPos.x = e.clientX;
+  pointerDownPos.y = e.clientY;
+});
+
+renderer.domElement.addEventListener('pointermove', (e) => {
+  // Move mode: drag rack with left click
+  if (isDraggingRack && dragTarget) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    if (raycaster.ray.intersectPlane(dragPlane, _dragIntersect)) {
+      dragTarget.position.x = _dragIntersect.x - dragPlanePoint.x;
+      dragTarget.position.z = _dragIntersect.z - dragPlanePoint.z;
+    }
+    return;
+  }
+
+  if (data.cableMode) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  // Check connection hover
+  const connMeshesList = [];
+  for (const [id, cg] of connMeshes) {
+    cg.traverse(child => { if (child.isMesh) connMeshesList.push(child); });
+  }
+  const cHits = raycaster.intersectObjects(connMeshesList);
+  if (cHits.length > 0) {
+    let hitConnId = null;
+    let obj = cHits[0].object;
+    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
+    if (obj.parent?.userData?.connId) hitConnId = obj.parent.userData.connId;
+    if (hitConnId) {
+      renderer.domElement.style.cursor = 'pointer';
+      if (data.highlightConnId !== hitConnId && data.highlightDeviceId === null) {
+        filterByConn(hitConnId);
+      }
+      return;
+    }
+  }
+
+  // Check device hover
+  const devMeshesList = [];
+  for (const [id, md] of devMeshes) {
+    md.group.traverse(child => { if (child.isMesh) devMeshesList.push(child); });
+  }
+  const dHits = raycaster.intersectObjects(devMeshesList);
+  if (dHits.length > 0) {
+    renderer.domElement.style.cursor = 'pointer';
+    // Get hovered device ID
+    const hit = dHits[0].object;
+    let parent = hit.parent;
+    while (parent && !parent.userData.deviceId) parent = parent.parent;
+    if (parent && parent.userData.deviceId) {
+      const devId = parent.userData.deviceId;
+      if (data.hoveredDeviceId !== devId) {
+        data.hoveredDeviceId = devId;
+        applyLabelVisibility();
+      }
+    }
+    return;
+  }
+
+  renderer.domElement.style.cursor = isDraggingRack ? 'grabbing' : 'default';
+  // Clear hovered device label
+  if (data.hoveredDeviceId !== null) {
+    data.hoveredDeviceId = null;
+    applyLabelVisibility();
+  }
+  // If no hover, but we had a conn highlight from hover, clear it (unless device filter is active)
+  if (data.highlightConnId !== null && data.highlightDeviceId === null) {
+    clearHighlight();
+  }
+});
+
+renderer.domElement.addEventListener('pointerup', (e) => {
+  // Finish move-mode rack drag
+  if (isDraggingRack && dragTarget) {
+    isDraggingRack = false;
+    renderer.domElement.style.cursor = data.moveMode ? 'move' : 'default';
+    const rack = data.racks.find(r => r.id === dragRackId);
+    if (rack) {
+      if (!rack.position) rack.position = {};
+      rack.position.x = Math.round(dragTarget.position.x * 10) / 10;
+      rack.position.z = Math.round(dragTarget.position.z * 10) / 10;
+      saveToStorage();
+      updatePanel();
+    }
+    dragTarget = null;
+    dragRackId = null;
+    return;
+  }
+
+  if (!isPointerDown) return;
+  isPointerDown = false;
+  const dx = e.clientX - pointerDownPos.x;
+  const dy = e.clientY - pointerDownPos.y;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) return;
+
+  const rect = renderer.domElement.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+
+  // Click connection?
+  const connMeshesList = [];
+  for (const [id, cg] of connMeshes) {
+    cg.traverse(child => { if (child.isMesh) connMeshesList.push(child); });
+  }
+  let cHits = raycaster.intersectObjects(connMeshesList);
+  if (cHits.length > 0) {
+    let hitConnId = null;
+    let obj = cHits[0].object;
+    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
+    if (obj.parent?.userData?.connId) hitConnId = obj.parent.userData.connId;
+    if (hitConnId) {
+      // Toggle highlight
+      if (data.highlightConnId === hitConnId) {
+        clearHighlight();
+      } else {
+        filterByConn(hitConnId);
+      }
+      return;
+    }
+  }
+
+  // Click device?
+  const devMeshesList = [];
+  for (const [id, md] of devMeshes) {
+    md.group.traverse(child => { if (child.isMesh) devMeshesList.push(child); });
+  }
+  const dHits = raycaster.intersectObjects(devMeshesList);
+  if (dHits.length > 0) {
+    const hit = dHits[0].object;
+    let parent = hit.parent;
+    while (parent && !parent.userData.deviceId) parent = parent.parent;
+    if (parent && parent.userData.deviceId) {
+      const devId = parent.userData.deviceId;
+      if (data.cableMode) {
+        handleCableClick(devId);
+      } else {
+        // Toggle device filter on click
+        if (data.highlightDeviceId === devId) {
+          clearHighlight();
+        } else {
+          filterByDevice(devId);
+          openEditModal(devId);  // Also open edit
+        }
+      }
+      return;
+    }
+  }
+
+  // Click empty space �?clear highlight
+  if (data.highlightConnId !== null || data.highlightDeviceId !== null) {
+    clearHighlight();
+    return;
+  }
+
+  // Click rack slot
+  const ri = raycaster.intersectObjects(rackGroup.children, true);
+  for (const hit of ri) {
+    let obj = hit.object;
+    while (obj.parent && !(obj.parent.userData && obj.parent.userData.rackId)) obj = obj.parent;
+    if (obj.parent && obj.parent.userData && obj.parent.userData.rackId) {
+      const rackId = obj.parent.userData.rackId;
+      const rack = data.racks.find(r => r.id === rackId);
+      if (!rack) break;
+      const yLocal = hit.point.y;
+      const slotFloat = (yLocal - RACK_PADDING) / U_HEIGHT;
+      const slot = Math.floor(slotFloat) + 1;
+      if (slot >= 1 && slot <= rack.slots) {
+        const occupied = rack.devices.some(d => {
+          const dh = d.height || 1;
+          return d.slot <= slot && (d.slot + dh - 1) >= slot;
+        });
+        if (!occupied) {
+          if (data.cableMode) {
+            data.cableMode = false; data.cableFirstId = null;
+            updateCableUI();
+          } else {
+            data.selectedRackId = rackId;
+            openAddModal(rackId, slot);
+          }
+        }
+      }
+      break;
+    }
+  }
+});
+
+// ==================== CABLE MODE ====================
+let pendingCablePair = null;
+
+function handleCableClick(devId) {
+  if (!data.cableFirstId) {
+    data.cableFirstId = devId;
+    const md = devMeshes.get(devId);
+    if (md) md.body.material.emissiveIntensity = 0.4;
+    document.getElementById('cableMode').textContent = `🔌 已选第一个设备，请点击第二个设备`;
+  } else {
+    if (data.cableFirstId === devId) {
+      // Cancel
+      data.cableMode = false; data.cableFirstId = null;
+      resetHighlights(); updateCableUI();
+      document.getElementById('cableMode').textContent = `🔌 连线模式已取消`;
+      setTimeout(() => { document.getElementById('cableMode').textContent = `🔌 连线模式 - 依次点击两个设备，选择网络类型`; }, 1500);
+      return;
+    }
+    // Show network type popup
+    pendingCablePair = { from: data.cableFirstId, to: devId };
+    showNetTypePopup();
+  }
+}
+
+function showNetTypePopup() {
+  const cont = document.getElementById('netTypeButtons');
+  cont.innerHTML = NETWORK_NAMES.map(n => `
+    <div class="net-btn" onclick="selectNetType('${n}')">
+      <div class="dot" style="background:${NETWORK_TYPES[n].color}"></div>
+      ${NETWORK_TYPES[n].label}
+    </div>
+  `).join('');
+  document.getElementById('netTypePopup').classList.add('open');
+}
+
+window.selectNetType = function(netType) {
+  if (!pendingCablePair) return;
+  const conn = {
+    id: data.nextConnId++,
+    from: pendingCablePair.from,
+    to: pendingCablePair.to,
+    networkType: netType,
+    color: NETWORK_TYPES[netType]?.color || '#4488ff'
+  };
+  data.connections.push(conn);
+  pendingCablePair = null;
+  data.cableMode = false;
+  data.cableFirstId = null;
+  document.getElementById('netTypePopup').classList.remove('open');
+  resetHighlights();
+  rebuildScene();
+  updateCableUI();
+  document.getElementById('cableMode').textContent = `�?已创�?${NETWORK_TYPES[netType]?.label || netType} 连接`;
+  setTimeout(() => {
+    document.getElementById('cableMode').textContent = `🔌 连线模式 - 依次点击两个设备，选择网络类型`;
+  }, 2000);
+};
+
+window.cancelNetType = function() {
+  pendingCablePair = null;
+  data.cableMode = false;
+  data.cableFirstId = null;
+  document.getElementById('netTypePopup').classList.remove('open');
+  resetHighlights();
+  updateCableUI();
+};
+
+function resetHighlights() {
+  for (const [id, md] of devMeshes) md.body.material.emissiveIntensity = 0.05;
+}
+
+// ==================== MODAL ====================
+const TYPE_HEIGHT_MAP = {
+  server: 2, switch: 1, router: 2,
+  cross_net: 2, linkway: 1,
+  antenna: 1,
+  firewall: 1, storage: 2, ups: 2,
+  patch: 1, custom: 1, other: 1
+};
+
+window.onTypeChange = function() {
+  const type = document.getElementById('fType').value;
+  document.getElementById('customNameField').style.display = (type === 'custom') ? 'block' : 'none';
+  // Auto-suggest U height
+  const h = TYPE_HEIGHT_MAP[type];
+  if (h) document.getElementById('fHeight').value = h;
+};
+let editingDeviceId = null;
+let addingToRackId = null;
+let addingToSlot = null;
+
+function openAddModal(rackId, slot) {
+  editingDeviceId = null; addingToRackId = rackId; addingToSlot = slot;
+  document.getElementById('modalTitle').textContent = `添加设备 - U�?${slot}`;
+  document.getElementById('fName').value = '';
+  document.getElementById('fIP').value = '';
+  document.getElementById('fType').value = 'server';
+  document.getElementById('fHeight').value = '2';
+  document.getElementById('fNotes').value = '';
+  document.getElementById('fCustomName').value = '';
+  document.getElementById('customNameField').style.display = 'none';
+  document.getElementById('btnDelete').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 100);
+}
+
+window.openEditModal = function(devId) {
+  const dev = findDevice(devId);
+  if (!dev) return;
+  editingDeviceId = devId; addingToRackId = null; addingToSlot = null;
+  document.getElementById('modalTitle').textContent = `编辑设备 - ${dev.name}`;
+  document.getElementById('fName').value = dev.name || '';
+  document.getElementById('fIP').value = dev.ip || '';
+  document.getElementById('fType').value = dev.type || 'other';
+  document.getElementById('fCustomName').value = dev.customName || '';
+  document.getElementById('customNameField').style.display = (dev.type === 'custom') ? 'block' : 'none';
+  document.getElementById('fHeight').value = dev.height || 1;
+  document.getElementById('fNotes').value = dev.notes || '';
+  document.getElementById('btnDelete').style.display = 'inline-block';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('fName').focus(), 100);
+};
+
+window.closeModal = function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingDeviceId = null; addingToRackId = null; addingToSlot = null;
+};
+
+window.saveDevice = function() {
+  const name = document.getElementById('fName').value.trim();
+  const ip = document.getElementById('fIP').value.trim();
+  const type = document.getElementById('fType').value;
+  const customName = document.getElementById('fCustomName').value.trim();
+  const height = parseInt(document.getElementById('fHeight').value) || 1;
+  const notes = document.getElementById('fNotes').value.trim();
+  let color = TYPE_COLORS[type] || '#795548';
+  let finalName = name;
+
+  if (type === 'custom') {
+    if (!customName) { showToast('请输入自定义模块名称'); return; }
+    finalName = name || customName;
+  }
+  if (!finalName) { showToast('请输入设备名�?); return; }
+
+  if (editingDeviceId) {
+    const dev = findDevice(editingDeviceId);
+    if (dev) {
+      dev.name = finalName;
+      dev.ip = ip;
+      dev.type = type;
+      dev.customName = (type === 'custom') ? customName : undefined;
+      dev.height = height;
+      dev.notes = notes;
+      dev.color = color;
+    }
+  } else if (addingToRackId && addingToSlot) {
+    const rack = data.racks.find(r => r.id === addingToRackId);
+    if (!rack) return;
+    const newSlotEnd = addingToSlot + height - 1;
+    if (newSlotEnd > rack.slots) { showToast('超出机柜范围�?); return; }
+    for (const d of rack.devices) {
+      const dEnd = d.slot + (d.height || 1) - 1;
+      if (!(newSlotEnd < d.slot || addingToSlot > dEnd)) { showToast(`U�?${addingToSlot} 已被占用`); return; }
+    }
+    rack.devices.push({
+      id: data.nextDevId++, slot: addingToSlot,
+      name: finalName, ip, type,
+      customName: (type === 'custom') ? customName : undefined,
+      height, notes, color
+    });
+  }
+  closeModal();
+  rebuildScene();
+};
+
+window.deleteDevice = function() {
+  if (!editingDeviceId) return;
+  const dev = findDevice(editingDeviceId);
+  if (!confirm(`确定删除 "${dev?.name}" 吗？`)) return;
+  const devId = editingDeviceId;
+  for (const rack of data.racks) {
+    const idx = rack.devices.findIndex(d => d.id === devId);
+    if (idx !== -1) { rack.devices.splice(idx, 1); break; }
+  }
+  data.connections = data.connections.filter(c => c.from !== devId && c.to !== devId);
+  closeModal();
+  rebuildScene();
+};
+
+function showToast(msg) {
+  const t = document.getElementById('hoverInfo');
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 2000);
+}
+
+// ==================== TOOLBAR (exposed to window) ====================
+window.addRack = function(slots) {
+  const name = prompt('请输入机柜名�?', `机柜 #${data.nextRackId}`);
+  if (name === null) return;
+  if (slots === undefined) {
+    const slotsInput = prompt('请输入机柜U�?', '40');
+    if (slotsInput === null) return;
+    slots = parseInt(slotsInput) || 40;
+  }
+  const position = autoPosition();
+  data.racks.push({ id: data.nextRackId++, name: name || `机柜 #${data.nextRackId-1}`, slots: Math.max(1, Math.min(100, slots)), devices: [], position });
+  rebuildScene();
+};
+
+function autoPosition() {
+  const spacing = RACK_WIDTH + 2.5;
+  const count = data.racks.length + 1;
+  const totalWidth = (count - 1) * spacing;
+  return { x: (data.racks.length) * spacing - totalWidth / 2, z: 0 };
+}
+
+window.toggleCableMode = function() {
+  data.cableMode = !data.cableMode;
+  data.cableFirstId = null;
+  // Exit move mode if entering cable mode
+  if (data.cableMode) { data.moveMode = false; updateMoveUI(); }
+  resetHighlights();
+  updateCableUI();
+};
+
+window.toggleMoveMode = function() {
+  data.moveMode = !data.moveMode;
+  // Exit cable mode if entering move mode
+  if (data.moveMode) { data.cableMode = false; data.cableFirstId = null; updateCableUI(); }
+  resetHighlights();
+  updateMoveUI();
+};
+
+function updateMoveUI() {
+  const btn = document.getElementById('moveBtn');
+  const hint = document.getElementById('moveMode');
+  if (data.moveMode) {
+    btn.style.background = '#2a8a4a'; btn.style.color = '#fff';
+    hint.classList.add('active');
+    renderer.domElement.style.cursor = 'move';
+  } else {
+    btn.style.background = ''; btn.style.color = '';
+    hint.classList.remove('active');
+    renderer.domElement.style.cursor = 'default';
+  }
+}
+
+window.toggleLabels = function() {
+  data.showLabels = !data.showLabels;
+  data.hoveredDeviceId = null;
+  const btn = document.getElementById('labelBtn');
+  if (data.showLabels) {
+    btn.style.background = '';
+    btn.style.color = '';
+  } else {
+    btn.style.background = '#6b1a2a';
+    btn.style.color = '#fff';
+  }
+  applyLabelVisibility();
+  labelRenderer.render(scene, camera);
+};
+
+window.exportData = function() {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `rack-config-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+};
+
+window.importData = function() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (imported.racks && Array.isArray(imported.racks)) {
+        data.racks = imported.racks; data.connections = imported.connections || [];
+        data.nextRackId = imported.nextRackId || 100;
+        data.nextDevId = imported.nextDevId || 1000;
+        data.nextConnId = imported.nextConnId || 100;
+        if (imported.filterNetwork) data.filterNetwork = imported.filterNetwork;
+        rebuildScene(); alert('导入成功�?);
+      } else { alert('无效的数据格�?); }
+    } catch (err) { alert('导入失败: ' + err.message); }
+  };
+  input.click();
+};
+
+window.deleteRack = function(rackId) {
+  if (rackId === undefined) {
+    // If no rackId, show a prompt to pick
+    if (data.racks.length === 0) { showToast('没有机柜可删�?); return; }
+    const list = data.racks.map((r,i) => `${i+1}. ${r.name} (${r.devices.length}个设�? ${r.slots}U)`).join('\n');
+    const input = prompt(`选择要删除的机柜:\n${list}\n\n输入编号或机柜名�?`);
+    if (!input) return;
+    const idx = parseInt(input) - 1;
+    const foundByIdx = !isNaN(idx) && idx >= 0 && idx < data.racks.length ? data.racks[idx] : null;
+    const foundByName = foundByIdx ? null : data.racks.find(r => r.name === input || r.name.includes(input));
+    const target = foundByIdx || foundByName;
+    if (!target) { showToast('未找到该机柜'); return; }
+    rackId = target.id;
+  }
+  const rack = data.racks.find(r => r.id === rackId);
+  if (!rack) return;
+  const devCount = rack.devices.length;
+  if (!confirm(`确定删除机柜�?{rack.name}」吗？\n该机柜有 ${devCount} 个设备�?{data.connections.filter(c => rack.devices.some(d => d.id === c.from || d.id === c.to)).length} 条连线\n删除后不可恢复！`)) return;
+  // Remove all connections involving this rack's devices
+  const rackDevIds = new Set(rack.devices.map(d => d.id));
+  data.connections = data.connections.filter(c => !rackDevIds.has(c.from) && !rackDevIds.has(c.to));
+  // Remove the rack
+  const ri = data.racks.indexOf(rack);
+  if (ri !== -1) data.racks.splice(ri, 1);
+  data.highlightDeviceId = null;
+  data.highlightConnId = null;
+  rebuildScene();
+  showToast(`�?已删除�?{rack.name}」`);
+};
+
+window.clearAll = function() {
+  if (!confirm('确定要清空所有数据吗？此操作不可恢复�?)) return;
+  data.racks = []; data.connections = [];
+  data.nextRackId = 1; data.nextDevId = 1; data.nextConnId = 1;
+  data.cableMode = false; data.cableFirstId = null;
+  data.moveMode = false;
+  updateMoveUI();
+  data.highlightConnId = null; data.highlightDeviceId = null;
+  rebuildScene();
+};
+
+// ==================== SIDE PANEL ====================
+function updatePanel() {
+  const panel = document.getElementById('panelContent');
+  if (data.racks.length === 0) {
+    panel.innerHTML = '<div style="text-align:center;color:#555;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📡</div><div>点击工具栏「添加机柜」开�?/div></div>';
+    return;
+  }
+
+  // ---- Network Filter ----
+  let html = `<div class="filter-group">
+    <div class="title">🌐 网络过滤</div>`;
+
+  let allChecked = NETWORK_NAMES.every(n => data.filterNetwork[n] !== false);
+  html += `<div class="filter-item">
+    <span class="select-all" onclick="toggleAllNetworks()">${allChecked ? '☑️ 全部取消' : '☑️ 全�?}</span>
+  </div>`;
+
+  for (const n of NETWORK_NAMES) {
+    const checked = data.filterNetwork[n] !== false;
+    const count = data.connections.filter(c => c.networkType === n).length;
+    const net = NETWORK_TYPES[n];
+    html += `<label class="filter-item">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleNetwork('${n}', this.checked)" />
+      <div class="dot" style="background:${net.color}"></div>
+      ${net.label}
+      <span class="count">${count}</span>
+    </label>`;
+  }
+
+  // Show filter state
+  const hasFilter = data.highlightDeviceId !== null || data.highlightConnId !== null;
+  if (hasFilter) {
+    if (data.highlightDeviceId) {
+      const dev = findDevice(data.highlightDeviceId);
+      html += `<div class="filter-item" style="color:#e94560;font-size:12px;margin-top:4px;">
+        🔍 查看: ${dev?.name || '设备'} 的连�?
+        <span style="margin-left:auto;cursor:pointer;" onclick="clearHighlight()">�?取消</span>
+      </div>`;
+    }
+  }
+
+  html += `</div>`;
+
+  // ---- Rack List ----
+  for (const rack of data.racks) {
+    html += `<div class="rack-info">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="margin-bottom:0;">机柜名称</label>
+        <button onclick="event.stopPropagation();deleteRack(${rack.id})" style="margin-left:auto;background:#6b1a2a;border:none;color:#eee;padding:3px 10px;border-radius:4px;font-size:12px;cursor:pointer;">🗑�?删除</button>
+      </div>
+      <input value="${rack.name}" onchange="renameRack(${rack.id}, this.value)" />
+      <label style="margin-top:6px;">位置 X</label>
+      <input type="number" step="0.5" value="${(rack.position && rack.position.x !== undefined) ? rack.position.x : 0}" onchange="moveRack(${rack.id}, 'x', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
+      <label style="margin-top:6px;margin-left:4%;">位置 Z</label>
+      <input type="number" step="0.5" value="${(rack.position && rack.position.z !== undefined) ? rack.position.z : 0}" onchange="moveRack(${rack.id}, 'z', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
+    <div class="dev-list">`;
+
+    for (const dev of rack.devices) {
+      const typeLabel = TYPE_NAMES[dev.type] || '📦 其他';
+      const color = dev.color || TYPE_COLORS[dev.type] || '#795548';
+      const isHighlighted = data.highlightDeviceId === dev.id;
+      html += `<div class="dev-item" onclick="selectDev(${dev.id})" style="${isHighlighted ? 'background:#1a3a5a;border:1px solid #e94560;' : ''}">
+        <div class="color-dot" style="background:${color}"></div>
+        <div class="dev-info">
+          <div class="dev-name">${dev.name}</div>
+          <div class="dev-ip">${dev.ip || '未设置IP'} · ${typeLabel}</div>
+        </div>
+        <div class="dev-slot">U${dev.slot}${(dev.height||1) > 1 ? '-'+(dev.slot+dev.height-1) : ''}</div>
+        <div class="dev-del" onclick="event.stopPropagation();deleteDevQuick(${dev.id})">×</div>
+      </div>`;
+    }
+    if (rack.devices.length === 0) {
+      html += `<div style="font-size:12px;color:#555;padding:8px;text-align:center;">点击机柜空位添加设备</div>`;
+    }
+
+    // Connections for this rack
+    const rackConns = data.connections.filter(c => {
+      const fd = findDevice(c.from); const td = findDevice(c.to);
+      return fd && td && rack.devices.includes(fd);
+    });
+    if (rackConns.length > 0) {
+      html += `<div class="conn-list">`;
+      for (const conn of rackConns) {
+        const fd = findDevice(conn.from); const td = findDevice(conn.to);
+        const netType = conn.networkType || '安全�?;
+        const netColor = NETWORK_TYPES[netType]?.color || '#444';
+        const isHL = data.highlightConnId === conn.id;
+        html += `<div class="conn-item" style="border-left-color:${netColor};${isHL ? 'background:#1a3a5a;' : ''}" onclick="highlightConn(${conn.id})">
+          <span style="color:#666;font-size:10px;">${netType}</span>
+          ${fd?.name} �?${td?.name}
+          <div class="conn-del" onclick="event.stopPropagation();deleteConnQuick(${conn.id})">×</div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+
+  // ---- Antenna List ----
+  if (data.antennas.length > 0) {
+    html += `<div class="filter-group" style="margin-top:12px;">
+      <div class="title">📡 室外天线</div>`;
+    for (const ant of data.antennas) {
+      html += `<div class="dev-item" onclick="editAntenna(${ant.id})">
+        <div class="color-dot" style="background:${ant.color || '#00E676'}"></div>
+        <div class="dev-info">
+          <div class="dev-name">📡 ${ant.name}</div>
+          <div class="dev-ip">位置: ${ant.position.x}, ${ant.position.z}</div>
+        </div>
+        <div class="dev-del" onclick="event.stopPropagation();deleteAntenna(${ant.id})">×</div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+// Filter functions
+window.toggleNetwork = function(name, checked) {
+  data.filterNetwork[name] = checked;
+  applyFilters();
+  // Rebuild connections for visual update
+  rebuildScene();
+};
+
+window.toggleAllNetworks = function() {
+  const allOn = NETWORK_NAMES.every(n => data.filterNetwork[n] !== false);
+  for (const n of NETWORK_NAMES) data.filterNetwork[n] = !allOn;
+  rebuildScene();
+};
+
+window.highlightConn = function(connId) {
+  filterByConn(connId);
+};
+
+window.renameRack = function(rackId, name) {
+  const rack = data.racks.find(r => r.id === rackId);
+  if (rack) { rack.name = name; saveToStorage(); rebuildScene(); }
+};
+
+window.moveRack = function(rackId, axis, value) {
+  const rack = data.racks.find(r => r.id === rackId);
+  if (rack) {
+    if (!rack.position) rack.position = { x: 0, z: 0 };
+    rack.position[axis] = value;
+    saveToStorage();
+    rebuildScene();
+  }
+};
+
+window.selectDev = function(devId) {
+  openEditModal(devId);
+};
+
+window.deleteDevQuick = function(devId) {
+  const dev = findDevice(devId);
+  if (!dev || !confirm(`删除 "${dev.name}"？`)) return;
+  for (const rack of data.racks) {
+    const idx = rack.devices.findIndex(d => d.id === devId);
+    if (idx !== -1) { rack.devices.splice(idx, 1); break; }
+  }
+  data.connections = data.connections.filter(c => c.from !== devId && c.to !== devId);
+  rebuildScene();
+};
+
+window.deleteConnQuick = function(connId) {
+  data.connections = data.connections.filter(c => c.id !== connId);
+  if (data.highlightConnId === connId) clearHighlight();
+  rebuildScene();
+};
+
+function updateCableUI() {
+  const btn = document.getElementById('cableBtn');
+  const hint = document.getElementById('cableMode');
+  if (data.cableMode) {
+    btn.style.background = '#e94560'; btn.style.color = '#fff';
+    hint.classList.add('active');
+  } else {
+    btn.style.background = ''; btn.style.color = '';
+    hint.classList.remove('active');
+  }
+}
+
+
+// ==================== ANTENNA MANAGEMENT ====================
+window.startPlaceAntenna = function() {
+  if (data.antennaPlaceMode) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
+  data.antennaPlaceMode = true;
+  document.getElementById('antennaHint').style.display = 'block';
+  document.getElementById('antennaHint').textContent = '📡 点击场景地面放置天线（Esc取消�?;
+  if (data.cableMode) { data.cableMode = false; data.cableFirstId = null; updateCableUI(); }
+  if (data.moveMode) { data.moveMode = false; updateMoveUI(); }
+};
+
+function placeAntenna(worldX, worldZ) {
+  const name = prompt('天线名称:', `室外天线 #${data.nextAntennaId}`);
+  if (name === null) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
+  data.antennas.push({
+    id: data.nextAntennaId++,
+    name: name || `室外天线 #${data.nextAntennaId-1}`,
+    position: { x: Math.round(worldX * 10) / 10, z: Math.round(worldZ * 10) / 10 },
+    color: '#00E676',
+    notes: ''
+  });
+  data.antennaPlaceMode = false;
+  document.getElementById('antennaHint').style.display = 'none';
+  rebuildScene();
+}
+
+window.deleteAntenna = function(antId) {
+  const ant = data.antennas.find(a => a.id === antId);
+  if (!ant || !confirm(`确定删除天线�?{ant.name}」吗？`)) return;
+  data.antennas = data.antennas.filter(a => a.id !== antId);
+  rebuildScene();
+};
+
+window.editAntenna = function(antId) {
+  const ant = data.antennas.find(a => a.id === antId);
+  if (!ant) return;
+  const newName = prompt('天线名称:', ant.name);
+  if (newName === null) return;
+  ant.name = newName || ant.name;
+  rebuildScene();
+};
+
+// ==================== STATUS ====================
+function updateStatus() {
+  let dc = 0;
+  for (const r of data.racks) dc += r.devices.length;
+  document.getElementById('rackCount').textContent = `机柜: ${data.racks.length}`;
+  document.getElementById('devCount').textContent = `设备: ${dc}`;
+  document.getElementById('connCount').textContent = `连接: ${data.connections.length}`;
+}
+
+// ==================== STORAGE ====================
+function saveToStorage() {
+  try {
+    const saveData = {
+      racks: data.racks, connections: data.connections,
+      nextRackId: data.nextRackId, nextDevId: data.nextDevId, nextConnId: data.nextConnId,
+      filterNetwork: data.filterNetwork,
+      showLabels: data.showLabels,
+    };
+    localStorage.setItem('rack3d_data', JSON.stringify(saveData));
+    document.getElementById('saveStatus').textContent = '💾 已保�?' + new Date().toLocaleTimeString();
+  } catch (e) { console.warn('Save failed:', e); }
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('rack3d_data');
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (saved.racks && Array.isArray(saved.racks)) {
+        data.racks = saved.racks;
+        data.connections = saved.connections || [];
+        data.nextRackId = saved.nextRackId || 100;
+        data.nextDevId = saved.nextDevId || 1000;
+        data.nextConnId = saved.nextConnId || 100;
+        if (saved.filterNetwork) data.filterNetwork = saved.filterNetwork;
+        if (saved.showLabels !== undefined) data.showLabels = saved.showLabels;
+        return true;
+      }
+    }
+  } catch (e) { console.warn('Load failed:', e); }
+  return false;
+}
+
+// ==================== ANIMATION ====================
+let animTime = 0;
+
+function animate() {
+  requestAnimationFrame(animate);
+  animTime += 0.016;
+  controls.update();
+
+  // Subtle floor glow pulse
+  if (glowRing && glowRing.material) {
+    glowRing.material.opacity = 0.03 + Math.sin(animTime * 0.3) * 0.015;
+  }
+
+  // Cable flow animation (shift emissive intensity along cables)
+  const flowPhase = (Math.sin(animTime * 0.5) * 0.5 + 0.5) * 0.15 + 0.1;
+  for (const [connId, cg] of connMeshes) {
+    if (!cg.visible) continue;
+    cg.traverse(child => {
+      if (child.isMesh && child.material && child.userData.connId) {
+        if (child.geometry.type === 'TubeGeometry') {
+          child.material.emissiveIntensity = flowPhase;
+        }
+      }
+    });
+  }
+
+  // Device LED blink for selected/highlighted
+  if (data.highlightDeviceId !== null) {
+    const md = devMeshes.get(data.highlightDeviceId);
+    if (md) {
+      const pulse = 0.1 + Math.sin(animTime * 3) * 0.08;
+      md.group.traverse(child => {
+        if (child.isMesh && child.material && child.material.emissiveIntensity !== undefined) {
+          if (!child.userData?.connId) {
+            child.material.emissiveIntensity = pulse;
+          }
+        }
+      });
+    }
+  }
+
+  // Nearby devices' LEDs randomly blink
+  for (const [id, md] of devMeshes) {
+    md.group.traverse(child => {
+      if (child.isMesh && child.geometry.type === 'CircleGeometry' && child.material.color) {
+        // LEDs get slight random flicker
+        if (child.material.color.getHex() === 0x00ff88 || child.material.color.getHex() === 0x00cc66) {
+          child.material.emissiveIntensity = 0.15 + Math.sin(animTime * 2 + id * 1.7) * 0.1 + 0.05;
+        }
+      }
+    });
+  }
+
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+}
+
+// ==================== RESIZE ====================
+window.addEventListener('resize', () => {
+  const w = viewport.clientWidth;
+  const h = viewport.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+  labelRenderer.setSize(w, h);
+});
+
+// ==================== KEYBOARD ====================
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('netTypePopup').classList.contains('open')) {
+      cancelNetType();
+    } else if (document.getElementById('modalOverlay').classList.contains('open')) {
+      closeModal();
+    } else if (data.cableMode) {
+      data.cableMode = false; data.cableFirstId = null;
+      resetHighlights(); updateCableUI();
+    } else if (data.moveMode) {
+      data.moveMode = false;
+      resetHighlights(); updateMoveUI();
+    } else if (data.highlightConnId !== null || data.highlightDeviceId !== null) {
+      clearHighlight();
+    }
+  }
+  if (e.key === 'Enter' && document.getElementById('modalOverlay').classList.contains('open')) {
+    saveDevice();
+  }
+});
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+});
+
+// ==================== INIT ====================
+const STORAGE_VERSION = 'v11';
+const storedVersion = localStorage.getItem('rack3d_version');
+if (storedVersion !== STORAGE_VERSION) {
+  localStorage.removeItem('rack3d_data');
+  localStorage.setItem('rack3d_version', STORAGE_VERSION);
+}
+
+if (!loadFromStorage()) {
+  const names = ['核心机柜','汇聚机柜','机柜 #3','机柜 #4','机柜 #5','机柜 #6','机柜 #7','机柜 #8'];
+  // First rack: 4 servers for 4 networks
+  data.racks.push({
+    id: data.nextRackId++, name: names[0], slots: 40,
+    devices: [
+      { id: data.nextDevId++, slot: 1,  name: '安全网服务器-1', ip: '10.0.1.10', type: 'server', height: 2, notes: '安全�?, color: '#FF4444' },
+      { id: data.nextDevId++, slot: 3,  name: '跨网访问-1',    ip: '10.0.5.10', type: 'cross_net', height: 2, notes: '跨网访问设备', color: '#E91E63' },
+      { id: data.nextDevId++, slot: 5,  name: '联合网服务器-1', ip: '10.0.2.10', type: 'server', height: 2, notes: '联合�?, color: '#4488FF' },
+      { id: data.nextDevId++, slot: 7,  name: '路由�?1',      ip: '10.0.99.1', type: 'router', height: 2, notes: '核心路由�?, color: '#FF9800' },
+      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器-1', ip: '10.0.3.10', type: 'server', height: 2, notes: '可靠�?, color: '#44CC44' },
+      { id: data.nextDevId++, slot: 11, name: '非密网服务器-1', ip: '10.0.4.10', type: 'server', height: 2, notes: '非密�?, color: '#FF8800' },
+      { id: data.nextDevId++, slot: 13, name: '核心交换�?,    ip: '192.168.1.1', type: 'switch', height: 1, notes: '主交�?, color: '#2196F3' },
+      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW1',   ip: '192.168.1.2', type: 'linkway', height: 1, notes: 'LinkWay交换�?, color: '#00BCD4' },
+    ]
+  });
+  // Second rack: 4 servers for 4 networks
+  data.racks.push({
+    id: data.nextRackId++, name: names[1], slots: 40,
+    devices: [
+      { id: data.nextDevId++, slot: 1,  name: '安全网服务器-2', ip: '10.0.1.20', type: 'server', height: 2, notes: '安全�?, color: '#FF4444' },
+      { id: data.nextDevId++, slot: 3,  name: '跨网访问-2',    ip: '10.0.5.20', type: 'cross_net', height: 2, notes: '跨网访问设备', color: '#E91E63' },
+      { id: data.nextDevId++, slot: 5,  name: '联合网服务器-2', ip: '10.0.2.20', type: 'server', height: 2, notes: '联合�?, color: '#4488FF' },
+      { id: data.nextDevId++, slot: 7,  name: '路由�?2',      ip: '10.0.99.2', type: 'router', height: 2, notes: '核心路由�?, color: '#FF9800' },
+      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器-2', ip: '10.0.3.20', type: 'server', height: 2, notes: '可靠�?, color: '#44CC44' },
+      { id: data.nextDevId++, slot: 11, name: '非密网服务器-2', ip: '10.0.4.20', type: 'server', height: 2, notes: '非密�?, color: '#FF8800' },
+      { id: data.nextDevId++, slot: 13, name: '接入交换�?,    ip: '192.168.1.10', type: 'switch', height: 1, notes: '接入交换', color: '#2196F3' },
+      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW2',   ip: '192.168.1.11', type: 'linkway', height: 1, notes: 'LinkWay交换�?, color: '#00BCD4' },
+    ]
+  });
+  // Remaining 6 empty racks
+  for (let i = 2; i < 8; i++) {
+    data.racks.push({ id: data.nextRackId++, name: names[i], slots: 40, devices: [] });
+  }
+  // Connections: first rack �?second rack for each network
+  data.connections.push(
+    { id: data.nextConnId++, from: 1, to: 9,  networkType: '安全�?, color: '#FF4444' },
+    { id: data.nextConnId++, from: 2, to: 10, networkType: '联合�?, color: '#4488FF' },
+    { id: data.nextConnId++, from: 3, to: 11, networkType: '联合�?, color: '#4488FF' },
+    { id: data.nextConnId++, from: 4, to: 12, networkType: '可靠�?, color: '#44CC44' },
+    { id: data.nextConnId++, from: 5, to: 13, networkType: '可靠�?, color: '#44CC44' },
+    { id: data.nextConnId++, from: 6, to: 14, networkType: '非密�?, color: '#FF8800' },
+    { id: data.nextConnId++, from: 7, to: 15, networkType: '安全�?, color: '#FF4444' },
+    { id: data.nextConnId++, from: 8, to: 16, networkType: '非密�?, color: '#FF8800' },
+  );
+  saveToStorage();
+}
+
+rebuildScene();
+animate();
+
+console.log('📡 Rack3D v3 loaded - 4 network types: 安全�? 联合�? 可靠�? 非密�?);
+setInterval(saveToStorage, 30000);
+
+</script>
+</body>
+</html>
