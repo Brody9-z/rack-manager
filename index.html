@@ -419,21 +419,21 @@
 
 <!-- Toolbar -->
 <div id="toolbar">
-  <span class="title">📡 Rack3D <small>3D 机柜可视�?/small></span>
-  <button onclick="addRack()">�?添加机柜</button>
-  <button onclick="addRack(8)" style="background:#2a5a3a;">📦 小机�?8U)</button>
+  <span class="title">📡 Rack3D <small>3D 机柜可视化/small></span>
+  <button onclick="addRack()">添加机柜</button>
+  <button onclick="addRack(8)" style="background:#2a5a3a;">📦 小机8U)</button>
   <button onclick="toggleCableMode()" id="cableBtn">🔌 连线</button>
   <button onclick="toggleMoveMode()" id="moveBtn">📦 移动</button>
   <div class="sep"></div>
   <button onclick="exportData()">💾 导出</button>
   <button onclick="importData()">📂 导入</button>
   <div class="sep"></div>
-  <button onclick="deleteRack()">🗑�?删除机柜</button>
+  <button onclick="deleteRack()">🗑删除机柜</button>
   <button class="danger" onclick="clearAll()">💣 清空</button>
-  <button onclick="toggleLabels()" id="labelBtn">🏷�?标签</button>
+  <button onclick="toggleLabels()" id="labelBtn">🏷标签</button>
   <div class="sep"></div>
   <button onclick="startPlaceAntenna()" style="background:#2a6a3a;">📡 放置天线</button>
-  <span class="hint">🖱 左键旋转 · 滚轮缩放 · 点击空位添加 · <b style="color:#e94560;">「移动」模式拖�?/b> · Enter确认 · Esc取消</span>
+  <span class="hint">🖱 左键旋转 · 滚轮缩放 · 点击空位添加 · <b style="color:#e94560;">「移动」模式拖拽/b> · Enter确认 · Esc取消</span>
 </div>
 
 <!-- 3D Viewport -->
@@ -447,7 +447,7 @@
 <!-- Cable mode hint -->
 <div id="cableMode">🔌 连线模式 - 依次点击两个设备，选择网络类型</div>
 <div id="moveMode">📦 移动模式 - 左键点击机柜/天线并拖动来调整位置</div>
-<div id="hoverInfo">💡 �?Esc 取消选中 / 取消过滤</div>
+<div id="hoverInfo">💡 💡 按 Esc 取消选中 / 取消过滤选中 / 取消过滤</div>
 <div id="antennaHint" style="position:fixed;bottom:72px;right:20px;display:none;background:#16213e;border:1px solid #00E676;border-radius:4px;padding:6px 10px;font-size:11px;color:#00E676;z-index:100;">📡 点击场景地面放置天线</div>
 
 <!-- Status bar -->
@@ -455,7 +455,7 @@
   <span id="rackCount">机柜: 0</span>
   <span id="devCount">设备: 0</span>
   <span id="connCount">连接: 0</span>
-  <span id="saveStatus">💾 已保�?/span>
+  <span id="saveStatus">💾 已保存/span>
 </div>
 
 <!-- Context Menu (右击菜单) -->
@@ -473,47 +473,47 @@
 <!-- Edit Modal -->
 <div id="modalOverlay">
   <div id="modalBox">
-    <h3 id="modalTitle">编辑设备</h3>
+    <h3 id="modalTitle">✏️ 编辑设备</h3>
     <div class="field">
       <label>设备名称</label>
-      <input type="text" id="fName" placeholder="�? 核心交换�?>
+      <input type="text" id="fName" placeholder=" 核心交换机>
     </div>
     <div class="field">
       <label>IP 地址</label>
-      <input type="text" id="fIP" placeholder="�? 192.168.1.1">
+      <input type="text" id="fIP" placeholder=" 192.168.1.1">
     </div>
     <div class="field">
       <label>设备类型</label>
       <select id="fType" onchange="onTypeChange()">
-        <option value="server">🖥�?服务�?/option>
-        <option value="switch">🔀 交换�?/option>
-        <option value="router">🌐 路由�?/option>
-        <option value="cross_net">🔄 跨网访问设备</option>
-        <option value="linkway">🔁 LinkWay交换�?/option>
-        <option value="antenna">📡 天线/转发�?/option>
-        <option value="firewall">🛡�?防火�?/option>
-        <option value="storage">💾 存储设备</option>
+        <option value="server">🖥服务/option>
+        <option value="switch">🔀 交换/option>
+        <option value="router">🌐 路由/option>
+        <option value="cross_net">🔄 跨网访问设备备</option>
+        <option value="linkway">🔁 LinkWay交换机/option>
+        <option value="antenna">📡 天线/转发器/option>
+        <option value="firewall">🛡防火墙</option>
+        <option value="storage">💾 存储设备备</option>
         <option value="ups">🔋 UPS</option>
-        <option value="patch">🔌 配线�?/option>
-        <option value="custom">📦 自定义模�?/option>
+        <option value="patch">🔌 配线架</option>
+        <option value="custom">📦 自定义模块/option>
         <option value="other">📦 其他</option>
       </select>
     </div>
     <div class="field" id="customNameField" style="display:none;">
-      <label>自定义模块名�?/label>
-      <input type="text" id="fCustomName" placeholder="�? 加密机、KVM切换�?..">
+      <label>自定义模块块名/label>
+      <input type="text" id="fCustomName" placeholder=" 加密机、KVM切换..">
     </div>
     <div class="field">
-      <label>U 位高�?/label>
+      <label>U 位高度/label>
       <input type="number" id="fHeight" value="1" min="1" max="10" style="width:80px">
       <span style="font-size:11px;color:#666;margin-left:6px;">U</span>
     </div>
     <div class="field">
       <label>备注</label>
-      <input type="text" id="fNotes" placeholder="可选备注信�?>
+      <input type="text" id="fNotes" placeholder="可选备注信>
     </div>
     <div class="btn-row">
-      <button class="danger" id="btnDelete" onclick="deleteDevice()">🗑�?删除</button>
+      <button class="danger" id="btnDelete" onclick="deleteDevice()">🗑删除</button>
       <button class="secondary" onclick="closeModal()">取消</button>
       <button class="primary" onclick="saveDevice()">💾 保存</button>
     </div>
@@ -548,10 +548,10 @@ const data = {
   moveMode: false,
   // Filter state
   filterNetwork: {
-    '安全�?: true,
-    '联合�?: true,
-    '可靠�?: true,
-    '非密�?: true,
+    '安全: true,
+    '联合: true,
+    '可靠: true,
+    '非密: true,
   },
   // Highlight state
   highlightConnId: null,
@@ -564,12 +564,12 @@ const data = {
 
 // ==================== CONSTANTS ====================
 const NETWORK_TYPES = {
-  '安全�?: { color: '#FF4444', label: '🛡�?安全�? },
-  '联合�?: { color: '#4488FF', label: '🔗 联合�? },
-  '可靠�?: { color: '#44CC44', label: '�?可靠�? },
-  '非密�?: { color: '#FF8800', label: '📡 非密�? },
+  '安全: { color: '#FF4444', label: '🛡安全 },
+  '联合: { color: '#4488FF', label: '🔗 联合 },
+  '可靠: { color: '#44CC44', label: '可靠 },
+  '非密: { color: '#FF8800', label: '📡 非密 },
 };
-const NETWORK_NAMES = ['安全�?, '联合�?, '可靠�?, '非密�?];
+const NETWORK_NAMES = ['安全, '联合, '可靠, '非密];
 
 const TYPE_COLORS = {
   server:      '#4CAF50',
@@ -579,24 +579,24 @@ const TYPE_COLORS = {
   storage:     '#9C27B0',
   ups:         '#FFEB3B',
   patch:       '#607D8B',
-  cross_net:   '#E91E63',   // 跨网访问设备
-  linkway:     '#00BCD4',   // LinkWay交换�?
-  antenna:     '#00E676',   // 天线/转发�?
-  custom:      '#AAAAAA',   // 自定义模�?
+  cross_net:   '#E91E63',   // 跨网访问设备备
+  linkway:     '#00BCD4',   // LinkWay交换机
+  antenna:     '#00E676',   // 天线/转发器
+  custom:      '#AAAAAA',   // 自定义模块
   other:       '#795548',
 };
 const TYPE_NAMES = {
-  server:      '🖥�?服务�?,
-  switch:      '🔀 交换�?,
-  router:      '🌐 路由�?,
-  firewall:    '🛡�?防火�?,
-  storage:     '💾 存储设备',
+  server:      '🖥服务,
+  switch:      '🔀 交换,
+  router:      '🌐 路由,
+  firewall:    '🛡防火,
+  storage:     '💾 存储设备备',
   ups:         '🔋 UPS',
-  patch:       '🔌 配线�?,
-  cross_net:   '🔄 跨网访问设备',
-  linkway:     '🔁 LinkWay交换�?,
-  antenna:     '📡 天线/转发�?,
-  custom:      '📦 自定义模�?,
+  patch:       '🔌 配线,
+  cross_net:   '🔄 跨网访问设备备',
+  linkway:     '🔁 LinkWay交换机,
+  antenna:     '📡 天线/转发器,
+  custom:      '📦 自定义模块,
   other:       '📦 其他',
 };
 
@@ -614,7 +614,7 @@ scene.background = new THREE.Color(0x0a0a1e);
   // Add a big watermark to confirm new version
   const watermarkDiv = document.createElement('div');
   watermarkDiv.id = 'versionBadge';
-  watermarkDiv.textContent = '�?v0.9 独立天线放置';
+  watermarkDiv.textContent = 'v0.9 ✨ v0.9 独立天线放置';
   watermarkDiv.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);z-index:9999;color:#e94560;font-size:14px;font-weight:bold;background:rgba(22,33,62,0.7);backdrop-filter:blur(8px);padding:6px 18px;border-radius:8px;border:1px solid rgba(233,69,96,0.3);letter-spacing:1px;';
   document.body.appendChild(watermarkDiv);
 
@@ -710,8 +710,8 @@ scene.add(rackGroup);
 const connectionGroup = new THREE.Group();
 scene.add(connectionGroup);
 
-const devMeshes = new Map(); // deviceId �?{ group, mesh, body, label, data }
-const connMeshes = new Map(); // connId �?{ group, mesh, data }
+const devMeshes = new Map(); // deviceId { group, mesh, body, label, data }
+const connMeshes = new Map(); // connId { group, mesh, data }
 
 // ==================== RACK BUILDING ====================
 function buildRack(rackData) {
@@ -752,7 +752,7 @@ function buildRack(rackData) {
     const y = i * U_HEIGHT + RACK_PADDING;
     const pts = [new THREE.Vector3(-RACK_WIDTH/2 + 0.2, y, RACK_DEPTH/2 + 0.01), new THREE.Vector3(RACK_WIDTH/2 - 0.2, y, RACK_DEPTH/2 + 0.01)];
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const line = new THREE.Line(geo, i % 5 === 0 ? new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.55 }) : lineMat);
+    const line = new THREE.Line(geo, i % 5 === 0  new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.55 }) : lineMat);
     g.add(line);
   }
 
@@ -931,8 +931,8 @@ function buildDeviceMesh(device, slotIndex, rackData) {
     for (let i = 0; i < Math.min(portsPerRow, 8); i++) {
       const xOff = -w/2 + 0.25 + i * 0.4;
       const ledC = new THREE.MeshStandardMaterial({
-        color: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
-        emissive: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
+        color: i % 2 === 0  0x00cc66 : 0xffaa00,
+        emissive: i % 2 === 0  0x00cc66 : 0xffaa00,
         emissiveIntensity: 0.12
       });
       const ld = new THREE.Mesh(new THREE.CircleGeometry(0.018, 6), ledC);
@@ -1082,8 +1082,8 @@ function buildDeviceMesh(device, slotIndex, rackData) {
     // Battery bars
     for (let i = 0; i < 5; i++) {
       const barMat = new THREE.MeshStandardMaterial({
-        color: i < 3 ? 0x00cc44 : (i < 4 ? 0xffaa00 : 0xff4422),
-        emissive: i < 3 ? 0x00cc44 : (i < 4 ? 0xffaa00 : 0xff4422),
+        color: i < 3  0x00cc44 : (i < 4  0xffaa00 : 0xff4422),
+        emissive: i < 3  0x00cc44 : (i < 4  0xffaa00 : 0xff4422),
         emissiveIntensity: 0.12
       });
       const bar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.1, 0.015), barMat);
@@ -1131,10 +1131,10 @@ function buildDeviceMesh(device, slotIndex, rackData) {
       group.add(p);
     }
 
-  // ============ ANTENNA / 转发�?============
+  // ============ ANTENNA / 转发============
   } else if (type === 'antenna') {
-    // ========== 室外单元天线 / 转发�?==========
-    // 三脚�?legs (三根斜腿)
+    // ========== 室外单元天线 / 转发==========
+    // 三脚legs (三根斜腿)
     const legMat = new THREE.MeshStandardMaterial({
       color: 0x8899aa, roughness: 0.4, metalness: 0.5
     });
@@ -1273,7 +1273,7 @@ function buildDeviceMesh(device, slotIndex, rackData) {
   // Label with glass effect
   const ipDisplay = device.ip || '';
   const labelDiv = document.createElement('div');
-  labelDiv.innerHTML = `<div style="font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.95);background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 8px;border-radius:4px;border-left:2px solid ${colorIdx};white-space:nowrap;">${device.name}${ipDisplay ? '<br><span style="font-size:9px;color:#8ab4e6;font-weight:400;">'+ipDisplay+'</span>':''}</div>`;
+  labelDiv.innerHTML = `<div style="font-size:10px;font-weight:600;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.95);background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);padding:3px 8px;border-radius:4px;border-left:2px solid ${colorIdx};white-space:nowrap;">${device.name}${ipDisplay  '<br><span style="font-size:9px;color:#8ab4e6;font-weight:400;">'+ipDisplay+'</span>':''}</div>`;
   const label = new CSS2DObject(labelDiv);
   label.position.set(0, 0, d/2 + 0.35);
 
@@ -1295,7 +1295,7 @@ function buildConnection(conn) {
   const toPos = getDeviceWorldPos(toDev);
   if (!fromPos || !toPos) return null;
 
-  const netColor = NETWORK_TYPES[conn.networkType]?.color || '#4488ff';
+  const netColor = NETWORK_TYPES[conn.networkType].color || '#4488ff';
   const color = new THREE.Color(netColor);
 
   const mid1 = new THREE.Vector3().lerpVectors(fromPos, toPos, 0.33);
@@ -1439,7 +1439,7 @@ function applyFilters() {
   for (const [connId, cg] of connMeshes) {
     const conn = data.connections.find(c => c.id === connId);
     if (!conn) continue;
-    const netType = conn.networkType || '安全�?;
+    const netType = conn.networkType || '安全;
     const filterOn = data.filterNetwork[netType] !== false;
 
     // Check highlight
@@ -1457,7 +1457,7 @@ function applyFilters() {
     cg.traverse(child => {
       if (child.isMesh && child.material) {
         if (visible) {
-          child.material.opacity = highlighted ? 0.85 : 0.15;
+          child.material.opacity = highlighted  0.85 : 0.15;
         }
       }
     });
@@ -1500,7 +1500,7 @@ function updateHoverInfo() {
   if (data.highlightDeviceId !== null) {
     const dev = findDevice(data.highlightDeviceId);
     if (dev) {
-      el.textContent = `🔍 查看 ${dev.name} 的连�?- 点击空白处取消过滤`;
+      el.textContent = `🔍 查看 ${dev.name} 的连- 点击空白处取消过滤`;
       el.classList.add('visible');
       return;
     }
@@ -1543,8 +1543,8 @@ function rebuildScene() {
   for (let ri = 0; ri < data.racks.length; ri++) {
     const rd = data.racks[ri];
     const g = buildRack(rd);
-    g.position.x = (rd.position && rd.position.x !== undefined) ? rd.position.x : 0;
-    g.position.z = (rd.position && rd.position.z !== undefined) ? rd.position.z : 0;
+    g.position.x = (rd.position && rd.position.x !== undefined)  rd.position.x : 0;
+    g.position.z = (rd.position && rd.position.z !== undefined)  rd.position.z : 0;
     rackGroup.add(g);
 
     for (const dev of rd.devices) {
@@ -1637,8 +1637,8 @@ renderer.domElement.addEventListener('contextmenu', (e) => {
   const cHits2 = raycaster.intersectObjects(connMeshList2);
   if (cHits2.length > 0) {
     let obj = cHits2[0].object;
-    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
-    if (obj.parent?.userData?.connId) {
+    while (obj.parent && !obj.parent.userData.connId) obj = obj.parent;
+    if (obj.parent.userData.connId) {
       showCtxMenu(e.clientX, e.clientY, 'conn', obj.parent.userData.connId);
       return;
     }
@@ -1663,7 +1663,7 @@ function showCtxMenu(x, y, type, id) {
     if (!rack) return;
     html = `
       <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">📦 ${rack.name}</div>
-      <div class="ctx-item" onclick="deleteRack(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除机柜</div>
+      <div class="ctx-item" onclick="deleteRack(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑删除机柜</div>
     `;
   } else if (type === 'device') {
     const dev = findDevice(id);
@@ -1671,16 +1671,16 @@ function showCtxMenu(x, y, type, id) {
     html = `
       <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">📟 ${dev.name}</div>
       <div class="ctx-item" onclick="openEditModal(${id})" style="padding:8px 14px;font-size:13px;color:#eee;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">✏️ 编辑设备</div>
-      <div class="ctx-item" onclick="deleteDevQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除设备</div>
+      <div class="ctx-item" onclick="deleteDevQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑删除设备</div>
     `;
   } else if (type === 'conn') {
     const conn = data.connections.find(c => c.id === id);
     if (!conn) return;
-    const from = findDevice(conn.from)?.name || '?';
-    const to = findDevice(conn.to)?.name || '?';
+    const from = findDevice(conn.from).name || '';
+    const to = findDevice(conn.to).name || '';
     html = `
-      <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">🔌 ${from} �?${to}</div>
-      <div class="ctx-item" onclick="deleteConnQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑�?删除连线</div>
+      <div style="padding:6px 14px;font-size:11px;color:#888;border-bottom:1px solid rgba(255,255,255,0.05);">🔌 ${from} ${to}</div>
+      <div class="ctx-item" onclick="deleteConnQuick(${id})" style="padding:8px 14px;font-size:13px;color:#e94560;cursor:pointer;transition:background .15s;" onmouseenter="this.style.background='#1a2a4a'" onmouseleave="this.style.background=''">🗑删除连线</div>
     `;
   }
   
@@ -1761,8 +1761,8 @@ renderer.domElement.addEventListener('pointermove', (e) => {
   if (cHits.length > 0) {
     let hitConnId = null;
     let obj = cHits[0].object;
-    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
-    if (obj.parent?.userData?.connId) hitConnId = obj.parent.userData.connId;
+    while (obj.parent && !obj.parent.userData.connId) obj = obj.parent;
+    if (obj.parent.userData.connId) hitConnId = obj.parent.userData.connId;
     if (hitConnId) {
       renderer.domElement.style.cursor = 'pointer';
       if (data.highlightConnId !== hitConnId && data.highlightDeviceId === null) {
@@ -1794,7 +1794,7 @@ renderer.domElement.addEventListener('pointermove', (e) => {
     return;
   }
 
-  renderer.domElement.style.cursor = isDraggingRack ? 'grabbing' : 'default';
+  renderer.domElement.style.cursor = isDraggingRack  'grabbing' : 'default';
   // Clear hovered device label
   if (data.hoveredDeviceId !== null) {
     data.hoveredDeviceId = null;
@@ -1810,7 +1810,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   // Finish move-mode rack drag
   if (isDraggingRack && dragTarget) {
     isDraggingRack = false;
-    renderer.domElement.style.cursor = data.moveMode ? 'move' : 'default';
+    renderer.domElement.style.cursor = data.moveMode  'move' : 'default';
     const rack = data.racks.find(r => r.id === dragRackId);
     if (rack) {
       if (!rack.position) rack.position = {};
@@ -1835,7 +1835,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
 
-  // Click connection?
+  // Click connection
   const connMeshesList = [];
   for (const [id, cg] of connMeshes) {
     cg.traverse(child => { if (child.isMesh) connMeshesList.push(child); });
@@ -1844,8 +1844,8 @@ renderer.domElement.addEventListener('pointerup', (e) => {
   if (cHits.length > 0) {
     let hitConnId = null;
     let obj = cHits[0].object;
-    while (obj.parent && !obj.parent.userData?.connId) obj = obj.parent;
-    if (obj.parent?.userData?.connId) hitConnId = obj.parent.userData.connId;
+    while (obj.parent && !obj.parent.userData.connId) obj = obj.parent;
+    if (obj.parent.userData.connId) hitConnId = obj.parent.userData.connId;
     if (hitConnId) {
       // Toggle highlight
       if (data.highlightConnId === hitConnId) {
@@ -1857,7 +1857,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
     }
   }
 
-  // Click device?
+  // Click device
   const devMeshesList = [];
   for (const [id, md] of devMeshes) {
     md.group.traverse(child => { if (child.isMesh) devMeshesList.push(child); });
@@ -1884,7 +1884,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
     }
   }
 
-  // Click empty space �?clear highlight
+  // Click empty space clear highlight
   if (data.highlightConnId !== null || data.highlightDeviceId !== null) {
     clearHighlight();
     return;
@@ -1964,7 +1964,7 @@ window.selectNetType = function(netType) {
     from: pendingCablePair.from,
     to: pendingCablePair.to,
     networkType: netType,
-    color: NETWORK_TYPES[netType]?.color || '#4488ff'
+    color: NETWORK_TYPES[netType].color || '#4488ff'
   };
   data.connections.push(conn);
   pendingCablePair = null;
@@ -1974,7 +1974,7 @@ window.selectNetType = function(netType) {
   resetHighlights();
   rebuildScene();
   updateCableUI();
-  document.getElementById('cableMode').textContent = `�?已创�?${NETWORK_TYPES[netType]?.label || netType} 连接`;
+  document.getElementById('cableMode').textContent = `✅ 已创建建${NETWORK_TYPES[netType].label || netType} 连接`;
   setTimeout(() => {
     document.getElementById('cableMode').textContent = `🔌 连线模式 - 依次点击两个设备，选择网络类型`;
   }, 2000);
@@ -2004,7 +2004,7 @@ const TYPE_HEIGHT_MAP = {
 
 window.onTypeChange = function() {
   const type = document.getElementById('fType').value;
-  document.getElementById('customNameField').style.display = (type === 'custom') ? 'block' : 'none';
+  document.getElementById('customNameField').style.display = (type === 'custom')  'block' : 'none';
   // Auto-suggest U height
   const h = TYPE_HEIGHT_MAP[type];
   if (h) document.getElementById('fHeight').value = h;
@@ -2015,7 +2015,7 @@ let addingToSlot = null;
 
 function openAddModal(rackId, slot) {
   editingDeviceId = null; addingToRackId = rackId; addingToSlot = slot;
-  document.getElementById('modalTitle').textContent = `添加设备 - U�?${slot}`;
+  document.getElementById('modalTitle').textContent = `添加设备 - U 位${slot}`;
   document.getElementById('fName').value = '';
   document.getElementById('fIP').value = '';
   document.getElementById('fType').value = 'server';
@@ -2037,7 +2037,7 @@ window.openEditModal = function(devId) {
   document.getElementById('fIP').value = dev.ip || '';
   document.getElementById('fType').value = dev.type || 'other';
   document.getElementById('fCustomName').value = dev.customName || '';
-  document.getElementById('customNameField').style.display = (dev.type === 'custom') ? 'block' : 'none';
+  document.getElementById('customNameField').style.display = (dev.type === 'custom')  'block' : 'none';
   document.getElementById('fHeight').value = dev.height || 1;
   document.getElementById('fNotes').value = dev.notes || '';
   document.getElementById('btnDelete').style.display = 'inline-block';
@@ -2061,10 +2061,10 @@ window.saveDevice = function() {
   let finalName = name;
 
   if (type === 'custom') {
-    if (!customName) { showToast('请输入自定义模块名称'); return; }
+    if (!customName) { showToast('请输入自定义模块块名称'); return; }
     finalName = name || customName;
   }
-  if (!finalName) { showToast('请输入设备名�?); return; }
+  if (!finalName) { showToast('请输入设备名称); return; }
 
   if (editingDeviceId) {
     const dev = findDevice(editingDeviceId);
@@ -2072,7 +2072,7 @@ window.saveDevice = function() {
       dev.name = finalName;
       dev.ip = ip;
       dev.type = type;
-      dev.customName = (type === 'custom') ? customName : undefined;
+      dev.customName = (type === 'custom')  customName : undefined;
       dev.height = height;
       dev.notes = notes;
       dev.color = color;
@@ -2081,15 +2081,15 @@ window.saveDevice = function() {
     const rack = data.racks.find(r => r.id === addingToRackId);
     if (!rack) return;
     const newSlotEnd = addingToSlot + height - 1;
-    if (newSlotEnd > rack.slots) { showToast('超出机柜范围�?); return; }
+    if (newSlotEnd > rack.slots) { showToast('超出机柜范围！围); return; }
     for (const d of rack.devices) {
       const dEnd = d.slot + (d.height || 1) - 1;
-      if (!(newSlotEnd < d.slot || addingToSlot > dEnd)) { showToast(`U�?${addingToSlot} 已被占用`); return; }
+      if (!(newSlotEnd < d.slot || addingToSlot > dEnd)) { showToast(`U${addingToSlot} 已被占用`); return; }
     }
     rack.devices.push({
       id: data.nextDevId++, slot: addingToSlot,
       name: finalName, ip, type,
-      customName: (type === 'custom') ? customName : undefined,
+      customName: (type === 'custom')  customName : undefined,
       height, notes, color
     });
   }
@@ -2100,7 +2100,7 @@ window.saveDevice = function() {
 window.deleteDevice = function() {
   if (!editingDeviceId) return;
   const dev = findDevice(editingDeviceId);
-  if (!confirm(`确定删除 "${dev?.name}" 吗？`)) return;
+  if (!confirm(`确定删除 "${dev.name}" 吗？`)) return;
   const devId = editingDeviceId;
   for (const rack of data.racks) {
     const idx = rack.devices.findIndex(d => d.id === devId);
@@ -2120,10 +2120,10 @@ function showToast(msg) {
 
 // ==================== TOOLBAR (exposed to window) ====================
 window.addRack = function(slots) {
-  const name = prompt('请输入机柜名�?', `机柜 #${data.nextRackId}`);
+  const name = prompt('请输入机柜名称', `机柜 #${data.nextRackId}`);
   if (name === null) return;
   if (slots === undefined) {
-    const slotsInput = prompt('请输入机柜U�?', '40');
+    const slotsInput = prompt('请输入机柜U', '40');
     if (slotsInput === null) return;
     slots = parseInt(slotsInput) || 40;
   }
@@ -2209,8 +2209,8 @@ window.importData = function() {
         data.nextDevId = imported.nextDevId || 1000;
         data.nextConnId = imported.nextConnId || 100;
         if (imported.filterNetwork) data.filterNetwork = imported.filterNetwork;
-        rebuildScene(); alert('导入成功�?);
-      } else { alert('无效的数据格�?); }
+        rebuildScene(); alert('导入成功！功);
+      } else { alert('无效的无效的数据格式); }
     } catch (err) { alert('导入失败: ' + err.message); }
   };
   input.click();
@@ -2219,13 +2219,13 @@ window.importData = function() {
 window.deleteRack = function(rackId) {
   if (rackId === undefined) {
     // If no rackId, show a prompt to pick
-    if (data.racks.length === 0) { showToast('没有机柜可删�?); return; }
-    const list = data.racks.map((r,i) => `${i+1}. ${r.name} (${r.devices.length}个设�? ${r.slots}U)`).join('\n');
-    const input = prompt(`选择要删除的机柜:\n${list}\n\n输入编号或机柜名�?`);
+    if (data.racks.length === 0) { showToast('没有机柜可删除); return; }
+    const list = data.racks.map((r,i) => `${i+1}. ${r.name} (${r.devices.length}个设 ${r.slots}U)`).join('\n');
+    const input = prompt(`选择要删除的机柜:\n${list}\n\n输入编号或机柜名称`);
     if (!input) return;
     const idx = parseInt(input) - 1;
-    const foundByIdx = !isNaN(idx) && idx >= 0 && idx < data.racks.length ? data.racks[idx] : null;
-    const foundByName = foundByIdx ? null : data.racks.find(r => r.name === input || r.name.includes(input));
+    const foundByIdx = !isNaN(idx) && idx >= 0 && idx < data.racks.length  data.racks[idx] : null;
+    const foundByName = foundByIdx  null : data.racks.find(r => r.name === input || r.name.includes(input));
     const target = foundByIdx || foundByName;
     if (!target) { showToast('未找到该机柜'); return; }
     rackId = target.id;
@@ -2233,7 +2233,7 @@ window.deleteRack = function(rackId) {
   const rack = data.racks.find(r => r.id === rackId);
   if (!rack) return;
   const devCount = rack.devices.length;
-  if (!confirm(`确定删除机柜�?{rack.name}」吗？\n该机柜有 ${devCount} 个设备�?{data.connections.filter(c => rack.devices.some(d => d.id === c.from || d.id === c.to)).length} 条连线\n删除后不可恢复！`)) return;
+  if (!confirm(`确定删除机柜{rack.name}」吗？\n该机柜有 ${devCount} 个设备{data.connections.filter(c => rack.devices.some(d => d.id === c.from || d.id === c.to)).length} 条连线\n删除后不可恢复！`)) return;
   // Remove all connections involving this rack's devices
   const rackDevIds = new Set(rack.devices.map(d => d.id));
   data.connections = data.connections.filter(c => !rackDevIds.has(c.from) && !rackDevIds.has(c.to));
@@ -2243,11 +2243,11 @@ window.deleteRack = function(rackId) {
   data.highlightDeviceId = null;
   data.highlightConnId = null;
   rebuildScene();
-  showToast(`�?已删除�?{rack.name}」`);
+  showToast(`✅ 已删除{rack.name}」`);
 };
 
 window.clearAll = function() {
-  if (!confirm('确定要清空所有数据吗？此操作不可恢复�?)) return;
+  if (!confirm('确定要清空所有数据吗？此操作不可恢复！复)) return;
   data.racks = []; data.connections = [];
   data.nextRackId = 1; data.nextDevId = 1; data.nextConnId = 1;
   data.cableMode = false; data.cableFirstId = null;
@@ -2261,17 +2261,17 @@ window.clearAll = function() {
 function updatePanel() {
   const panel = document.getElementById('panelContent');
   if (data.racks.length === 0) {
-    panel.innerHTML = '<div style="text-align:center;color:#555;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📡</div><div>点击工具栏「添加机柜」开�?/div></div>';
+    panel.innerHTML = '<div style="text-align:center;color:#555;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">📡📡</div><div>点击工具栏「添加机柜」开始/div></div>';
     return;
   }
 
   // ---- Network Filter ----
   let html = `<div class="filter-group">
-    <div class="title">🌐 网络过滤</div>`;
+    <div class="title">🌐 网络过滤滤</div>`;
 
   let allChecked = NETWORK_NAMES.every(n => data.filterNetwork[n] !== false);
   html += `<div class="filter-item">
-    <span class="select-all" onclick="toggleAllNetworks()">${allChecked ? '☑️ 全部取消' : '☑️ 全�?}</span>
+    <span class="select-all" onclick="toggleAllNetworks()">${allChecked  '☑️ ☑️ 全部取消' : '☑️ 全}</span>
   </div>`;
 
   for (const n of NETWORK_NAMES) {
@@ -2279,7 +2279,7 @@ function updatePanel() {
     const count = data.connections.filter(c => c.networkType === n).length;
     const net = NETWORK_TYPES[n];
     html += `<label class="filter-item">
-      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleNetwork('${n}', this.checked)" />
+      <input type="checkbox" ${checked  'checked' : ''} onchange="toggleNetwork('${n}', this.checked)" />
       <div class="dot" style="background:${net.color}"></div>
       ${net.label}
       <span class="count">${count}</span>
@@ -2292,8 +2292,8 @@ function updatePanel() {
     if (data.highlightDeviceId) {
       const dev = findDevice(data.highlightDeviceId);
       html += `<div class="filter-item" style="color:#e94560;font-size:12px;margin-top:4px;">
-        🔍 查看: ${dev?.name || '设备'} 的连�?
-        <span style="margin-left:auto;cursor:pointer;" onclick="clearHighlight()">�?取消</span>
+        🔍 查看: ${dev.name || '设备'} 的连
+        <span style="margin-left:auto;cursor:pointer;" onclick="clearHighlight()">取消</span>
       </div>`;
     }
   }
@@ -2305,26 +2305,26 @@ function updatePanel() {
     html += `<div class="rack-info">
       <div style="display:flex;align-items:center;gap:8px;">
         <label style="margin-bottom:0;">机柜名称</label>
-        <button onclick="event.stopPropagation();deleteRack(${rack.id})" style="margin-left:auto;background:#6b1a2a;border:none;color:#eee;padding:3px 10px;border-radius:4px;font-size:12px;cursor:pointer;">🗑�?删除</button>
+        <button onclick="event.stopPropagation();deleteRack(${rack.id})" style="margin-left:auto;background:#6b1a2a;border:none;color:#eee;padding:3px 10px;border-radius:4px;font-size:12px;cursor:pointer;">🗑删除</button>
       </div>
       <input value="${rack.name}" onchange="renameRack(${rack.id}, this.value)" />
       <label style="margin-top:6px;">位置 X</label>
-      <input type="number" step="0.5" value="${(rack.position && rack.position.x !== undefined) ? rack.position.x : 0}" onchange="moveRack(${rack.id}, 'x', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
+      <input type="number" step="0.5" value="${(rack.position && rack.position.x !== undefined)  rack.position.x : 0}" onchange="moveRack(${rack.id}, 'x', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
       <label style="margin-top:6px;margin-left:4%;">位置 Z</label>
-      <input type="number" step="0.5" value="${(rack.position && rack.position.z !== undefined) ? rack.position.z : 0}" onchange="moveRack(${rack.id}, 'z', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
+      <input type="number" step="0.5" value="${(rack.position && rack.position.z !== undefined)  rack.position.z : 0}" onchange="moveRack(${rack.id}, 'z', parseFloat(this.value)||0)" style="width:48%;display:inline-block;" />
     <div class="dev-list">`;
 
     for (const dev of rack.devices) {
       const typeLabel = TYPE_NAMES[dev.type] || '📦 其他';
       const color = dev.color || TYPE_COLORS[dev.type] || '#795548';
       const isHighlighted = data.highlightDeviceId === dev.id;
-      html += `<div class="dev-item" onclick="selectDev(${dev.id})" style="${isHighlighted ? 'background:#1a3a5a;border:1px solid #e94560;' : ''}">
+      html += `<div class="dev-item" onclick="selectDev(${dev.id})" style="${isHighlighted  'background:#1a3a5a;border:1px solid #e94560;' : ''}">
         <div class="color-dot" style="background:${color}"></div>
         <div class="dev-info">
           <div class="dev-name">${dev.name}</div>
           <div class="dev-ip">${dev.ip || '未设置IP'} · ${typeLabel}</div>
         </div>
-        <div class="dev-slot">U${dev.slot}${(dev.height||1) > 1 ? '-'+(dev.slot+dev.height-1) : ''}</div>
+        <div class="dev-slot">U${dev.slot}${(dev.height||1) > 1  '-'+(dev.slot+dev.height-1) : ''}</div>
         <div class="dev-del" onclick="event.stopPropagation();deleteDevQuick(${dev.id})">×</div>
       </div>`;
     }
@@ -2341,12 +2341,12 @@ function updatePanel() {
       html += `<div class="conn-list">`;
       for (const conn of rackConns) {
         const fd = findDevice(conn.from); const td = findDevice(conn.to);
-        const netType = conn.networkType || '安全�?;
-        const netColor = NETWORK_TYPES[netType]?.color || '#444';
+        const netType = conn.networkType || '安全;
+        const netColor = NETWORK_TYPES[netType].color || '#444';
         const isHL = data.highlightConnId === conn.id;
-        html += `<div class="conn-item" style="border-left-color:${netColor};${isHL ? 'background:#1a3a5a;' : ''}" onclick="highlightConn(${conn.id})">
+        html += `<div class="conn-item" style="border-left-color:${netColor};${isHL  'background:#1a3a5a;' : ''}" onclick="highlightConn(${conn.id})">
           <span style="color:#666;font-size:10px;">${netType}</span>
-          ${fd?.name} �?${td?.name}
+          ${fd.name} ${td.name}
           <div class="conn-del" onclick="event.stopPropagation();deleteConnQuick(${conn.id})">×</div>
         </div>`;
       }
@@ -2359,7 +2359,7 @@ function updatePanel() {
   // ---- Antenna List ----
   if (data.antennas.length > 0) {
     html += `<div class="filter-group" style="margin-top:12px;">
-      <div class="title">📡 室外天线</div>`;
+      <div class="title">📡 室外天线线</div>`;
     for (const ant of data.antennas) {
       html += `<div class="dev-item" onclick="editAntenna(${ant.id})">
         <div class="color-dot" style="background:${ant.color || '#00E676'}"></div>
@@ -2448,17 +2448,17 @@ window.startPlaceAntenna = function() {
   if (data.antennaPlaceMode) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
   data.antennaPlaceMode = true;
   document.getElementById('antennaHint').style.display = 'block';
-  document.getElementById('antennaHint').textContent = '📡 点击场景地面放置天线（Esc取消�?;
+  document.getElementById('antennaHint').textContent = '📡 点击场景地面放置天线（Esc取消消;
   if (data.cableMode) { data.cableMode = false; data.cableFirstId = null; updateCableUI(); }
   if (data.moveMode) { data.moveMode = false; updateMoveUI(); }
 };
 
 function placeAntenna(worldX, worldZ) {
-  const name = prompt('天线名称:', `室外天线 #${data.nextAntennaId}`);
+  const name = prompt('天线名称:', `室外天线线 #${data.nextAntennaId}`);
   if (name === null) { data.antennaPlaceMode = false; document.getElementById('antennaHint').style.display = 'none'; return; }
   data.antennas.push({
     id: data.nextAntennaId++,
-    name: name || `室外天线 #${data.nextAntennaId-1}`,
+    name: name || `室外天线线 #${data.nextAntennaId-1}`,
     position: { x: Math.round(worldX * 10) / 10, z: Math.round(worldZ * 10) / 10 },
     color: '#00E676',
     notes: ''
@@ -2470,7 +2470,7 @@ function placeAntenna(worldX, worldZ) {
 
 window.deleteAntenna = function(antId) {
   const ant = data.antennas.find(a => a.id === antId);
-  if (!ant || !confirm(`确定删除天线�?{ant.name}」吗？`)) return;
+  if (!ant || !confirm(`确定删除天线{ant.name}」吗？`)) return;
   data.antennas = data.antennas.filter(a => a.id !== antId);
   rebuildScene();
 };
@@ -2503,7 +2503,7 @@ function saveToStorage() {
       showLabels: data.showLabels,
     };
     localStorage.setItem('rack3d_data', JSON.stringify(saveData));
-    document.getElementById('saveStatus').textContent = '💾 已保�?' + new Date().toLocaleTimeString();
+    document.getElementById('saveStatus').textContent = '💾 已保存' + new Date().toLocaleTimeString();
   } catch (e) { console.warn('Save failed:', e); }
 }
 
@@ -2560,7 +2560,7 @@ function animate() {
       const pulse = 0.1 + Math.sin(animTime * 3) * 0.08;
       md.group.traverse(child => {
         if (child.isMesh && child.material && child.material.emissiveIntensity !== undefined) {
-          if (!child.userData?.connId) {
+          if (!child.userData.connId) {
             child.material.emissiveIntensity = pulse;
           }
         }
@@ -2634,44 +2634,44 @@ if (!loadFromStorage()) {
   data.racks.push({
     id: data.nextRackId++, name: names[0], slots: 40,
     devices: [
-      { id: data.nextDevId++, slot: 1,  name: '安全网服务器-1', ip: '10.0.1.10', type: 'server', height: 2, notes: '安全�?, color: '#FF4444' },
-      { id: data.nextDevId++, slot: 3,  name: '跨网访问-1',    ip: '10.0.5.10', type: 'cross_net', height: 2, notes: '跨网访问设备', color: '#E91E63' },
-      { id: data.nextDevId++, slot: 5,  name: '联合网服务器-1', ip: '10.0.2.10', type: 'server', height: 2, notes: '联合�?, color: '#4488FF' },
-      { id: data.nextDevId++, slot: 7,  name: '路由�?1',      ip: '10.0.99.1', type: 'router', height: 2, notes: '核心路由�?, color: '#FF9800' },
-      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器-1', ip: '10.0.3.10', type: 'server', height: 2, notes: '可靠�?, color: '#44CC44' },
-      { id: data.nextDevId++, slot: 11, name: '非密网服务器-1', ip: '10.0.4.10', type: 'server', height: 2, notes: '非密�?, color: '#FF8800' },
-      { id: data.nextDevId++, slot: 13, name: '核心交换�?,    ip: '192.168.1.1', type: 'switch', height: 1, notes: '主交�?, color: '#2196F3' },
-      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW1',   ip: '192.168.1.2', type: 'linkway', height: 1, notes: 'LinkWay交换�?, color: '#00BCD4' },
+      { id: data.nextDevId++, slot: 1,  name: '安全网服务器器-1', ip: '10.0.1.10', type: 'server', height: 2, notes: '安全, color: '#FF4444' },
+      { id: data.nextDevId++, slot: 3,  name: '跨网访问-1',    ip: '10.0.5.10', type: 'cross_net', height: 2, notes: '跨网访问设备备', color: '#E91E63' },
+      { id: data.nextDevId++, slot: 5,  name: '联合网服务器器-1', ip: '10.0.2.10', type: 'server', height: 2, notes: '联合, color: '#4488FF' },
+      { id: data.nextDevId++, slot: 7,  name: '路由1',      ip: '10.0.99.1', type: 'router', height: 2, notes: '核心路由器, color: '#FF9800' },
+      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器器-1', ip: '10.0.3.10', type: 'server', height: 2, notes: '可靠, color: '#44CC44' },
+      { id: data.nextDevId++, slot: 11, name: '非密网服务器器-1', ip: '10.0.4.10', type: 'server', height: 2, notes: '非密, color: '#FF8800' },
+      { id: data.nextDevId++, slot: 13, name: '核心交换机,    ip: '192.168.1.1', type: 'switch', height: 1, notes: '主交, color: '#2196F3' },
+      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW1',   ip: '192.168.1.2', type: 'linkway', height: 1, notes: 'LinkWay交换机, color: '#00BCD4' },
     ]
   });
   // Second rack: 4 servers for 4 networks
   data.racks.push({
     id: data.nextRackId++, name: names[1], slots: 40,
     devices: [
-      { id: data.nextDevId++, slot: 1,  name: '安全网服务器-2', ip: '10.0.1.20', type: 'server', height: 2, notes: '安全�?, color: '#FF4444' },
-      { id: data.nextDevId++, slot: 3,  name: '跨网访问-2',    ip: '10.0.5.20', type: 'cross_net', height: 2, notes: '跨网访问设备', color: '#E91E63' },
-      { id: data.nextDevId++, slot: 5,  name: '联合网服务器-2', ip: '10.0.2.20', type: 'server', height: 2, notes: '联合�?, color: '#4488FF' },
-      { id: data.nextDevId++, slot: 7,  name: '路由�?2',      ip: '10.0.99.2', type: 'router', height: 2, notes: '核心路由�?, color: '#FF9800' },
-      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器-2', ip: '10.0.3.20', type: 'server', height: 2, notes: '可靠�?, color: '#44CC44' },
-      { id: data.nextDevId++, slot: 11, name: '非密网服务器-2', ip: '10.0.4.20', type: 'server', height: 2, notes: '非密�?, color: '#FF8800' },
-      { id: data.nextDevId++, slot: 13, name: '接入交换�?,    ip: '192.168.1.10', type: 'switch', height: 1, notes: '接入交换', color: '#2196F3' },
-      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW2',   ip: '192.168.1.11', type: 'linkway', height: 1, notes: 'LinkWay交换�?, color: '#00BCD4' },
+      { id: data.nextDevId++, slot: 1,  name: '安全网服务器器-2', ip: '10.0.1.20', type: 'server', height: 2, notes: '安全, color: '#FF4444' },
+      { id: data.nextDevId++, slot: 3,  name: '跨网访问-2',    ip: '10.0.5.20', type: 'cross_net', height: 2, notes: '跨网访问设备备', color: '#E91E63' },
+      { id: data.nextDevId++, slot: 5,  name: '联合网服务器器-2', ip: '10.0.2.20', type: 'server', height: 2, notes: '联合, color: '#4488FF' },
+      { id: data.nextDevId++, slot: 7,  name: '路由2',      ip: '10.0.99.2', type: 'router', height: 2, notes: '核心路由器, color: '#FF9800' },
+      { id: data.nextDevId++, slot: 9,  name: '可靠网服务器器-2', ip: '10.0.3.20', type: 'server', height: 2, notes: '可靠, color: '#44CC44' },
+      { id: data.nextDevId++, slot: 11, name: '非密网服务器器-2', ip: '10.0.4.20', type: 'server', height: 2, notes: '非密, color: '#FF8800' },
+      { id: data.nextDevId++, slot: 13, name: '接入交换机,    ip: '192.168.1.10', type: 'switch', height: 1, notes: '接入交换机', color: '#2196F3' },
+      { id: data.nextDevId++, slot: 14, name: 'LinkWay-SW2',   ip: '192.168.1.11', type: 'linkway', height: 1, notes: 'LinkWay交换机, color: '#00BCD4' },
     ]
   });
   // Remaining 6 empty racks
   for (let i = 2; i < 8; i++) {
     data.racks.push({ id: data.nextRackId++, name: names[i], slots: 40, devices: [] });
   }
-  // Connections: first rack �?second rack for each network
+  // Connections: first rack second rack for each network
   data.connections.push(
-    { id: data.nextConnId++, from: 1, to: 9,  networkType: '安全�?, color: '#FF4444' },
-    { id: data.nextConnId++, from: 2, to: 10, networkType: '联合�?, color: '#4488FF' },
-    { id: data.nextConnId++, from: 3, to: 11, networkType: '联合�?, color: '#4488FF' },
-    { id: data.nextConnId++, from: 4, to: 12, networkType: '可靠�?, color: '#44CC44' },
-    { id: data.nextConnId++, from: 5, to: 13, networkType: '可靠�?, color: '#44CC44' },
-    { id: data.nextConnId++, from: 6, to: 14, networkType: '非密�?, color: '#FF8800' },
-    { id: data.nextConnId++, from: 7, to: 15, networkType: '安全�?, color: '#FF4444' },
-    { id: data.nextConnId++, from: 8, to: 16, networkType: '非密�?, color: '#FF8800' },
+    { id: data.nextConnId++, from: 1, to: 9,  networkType: '安全, color: '#FF4444' },
+    { id: data.nextConnId++, from: 2, to: 10, networkType: '联合, color: '#4488FF' },
+    { id: data.nextConnId++, from: 3, to: 11, networkType: '联合, color: '#4488FF' },
+    { id: data.nextConnId++, from: 4, to: 12, networkType: '可靠, color: '#44CC44' },
+    { id: data.nextConnId++, from: 5, to: 13, networkType: '可靠, color: '#44CC44' },
+    { id: data.nextConnId++, from: 6, to: 14, networkType: '非密, color: '#FF8800' },
+    { id: data.nextConnId++, from: 7, to: 15, networkType: '安全, color: '#FF4444' },
+    { id: data.nextConnId++, from: 8, to: 16, networkType: '非密, color: '#FF8800' },
   );
   saveToStorage();
 }
@@ -2679,7 +2679,7 @@ if (!loadFromStorage()) {
 rebuildScene();
 animate();
 
-console.log('📡 Rack3D v3 loaded - 4 network types: 安全�? 联合�? 可靠�? 非密�?);
+console.log('📡 Rack3D v3 loaded - 4 network types: 安全 联合 可靠 非密);
 setInterval(saveToStorage, 30000);
 
 </script>
