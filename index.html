@@ -928,8 +928,8 @@ function buildDeviceMesh(device, slotIndex, rackData) {
     for (let i = 0; i < Math.min(portsPerRow, 8); i++) {
       const xOff = -w/2 + 0.25 + i * 0.4;
       const ledC = new THREE.MeshStandardMaterial({
-        color: i % 2 === 0  0x00cc66 : 0xffaa00,
-        emissive: i % 2 === 0  0x00cc66 : 0xffaa00,
+        color: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
+        emissive: i % 2 === 0 ? 0x00cc66 : 0xffaa00,
         emissiveIntensity: 0.12
       });
       const ld = new THREE.Mesh(new THREE.CircleGeometry(0.018, 6), ledC);
@@ -1459,8 +1459,8 @@ function rebuildScene() {
   for (let ri = 0; ri < data.racks.length; ri++) {
     const rd = data.racks[ri];
     const g = buildRack(rd);
-    g.position.x = (rd.position && rd.position.x !== undefined)  rd.position.x : 0;
-    g.position.z = (rd.position && rd.position.z !== undefined)  rd.position.z : 0;
+    g.position.x = (rd.position && rd.position.x !== undefined) ? rd.position.x  : 0;
+    g.position.z = (rd.position && rd.position.z !== undefined) ? rd.position.z  : 0;
     rackGroup.add(g);
 
     for (const dev of rd.devices) {
@@ -1915,7 +1915,7 @@ const TYPE_HEIGHT_MAP = {
 
 window.onTypeChange = function() {
   const type = document.getElementById('fType').value;
-  document.getElementById('customNameField').style.display = (type === 'custom')  'block' : 'none';
+  document.getElementById('customNameField').style.display = (type === 'custom') ? 'block' : 'none';
   // Auto-suggest U height
   const h = TYPE_HEIGHT_MAP[type];
   if (h) document.getElementById('fHeight').value = h;
@@ -1948,7 +1948,7 @@ window.openEditModal = function(devId) {
   document.getElementById('fIP').value = dev.ip || '';
   document.getElementById('fType').value = dev.type || 'other';
   document.getElementById('fCustomName').value = dev.customName || '';
-  document.getElementById('customNameField').style.display = (dev.type === 'custom')  'block' : 'none';
+  document.getElementById('customNameField').style.display = (dev.type === 'custom') ? 'block' : 'none';
   document.getElementById('fHeight').value = dev.height || 1;
   document.getElementById('fNotes').value = dev.notes || '';
   document.getElementById('btnDelete').style.display = 'inline-block';
@@ -1983,7 +1983,7 @@ window.saveDevice = function() {
       dev.name = finalName;
       dev.ip = ip;
       dev.type = type;
-      dev.customName = (type === 'custom')  customName : undefined;
+      dev.customName = (type === 'custom') ? customName : undefined;
       dev.height = height;
       dev.notes = notes;
       dev.color = color;
@@ -2000,7 +2000,7 @@ window.saveDevice = function() {
     rack.devices.push({
       id: data.nextDevId++, slot: addingToSlot,
       name: finalName, ip, type,
-      customName: (type === 'custom')  customName : undefined,
+      customName: (type === 'custom') ? customName : undefined,
       height, notes, color
     });
   }
@@ -2135,8 +2135,8 @@ window.deleteRack = function(rackId) {
     const input = prompt(`选择要删除的机柜:\n${list}\n\n输入编号或机柜名称`);
     if (!input) return;
     const idx = parseInt(input) - 1;
-    const foundByIdx = !isNaN(idx) && idx >= 0 && idx < data.racks.length  data.racks[idx] : null;
-    const foundByName = foundByIdx  null : data.racks.find(r => r.name === input || r.name.includes(input));
+    const foundByIdx = !isNaN(idx) && idx >= 0 && idx < data.racks.length ? data.racks[idx] : null;
+    const foundByName = foundByIdx ? null : data.racks.find(r => r.name === input || r.name.includes(input));
     const target = foundByIdx || foundByName;
     if (!target) { showToast('未找到该机柜'); return; }
     rackId = target.id;
@@ -2235,7 +2235,7 @@ function updatePanel() {
           <div class="dev-name">${dev.name}</div>
           <div class="dev-ip">${dev.ip || '未设置IP'} · ${typeLabel}</div>
         </div>
-        <div class="dev-slot">U${dev.slot}${(dev.height||1) > 1  '-'+(dev.slot+dev.height-1) : ''}</div>
+        <div class="dev-slot">U${dev.slot}${(dev.height||1) > 1 ? '-'+(dev.slot+dev.height-1) : ''}</div>
         <div class="dev-del" onclick="event.stopPropagation();deleteDevQuick(${dev.id})">×</div>
       </div>`;
     }
