@@ -749,7 +749,7 @@ function buildRack(rackData) {
     const y = i * U_HEIGHT + RACK_PADDING;
     const pts = [new THREE.Vector3(-RACK_WIDTH/2 + 0.2, y, RACK_DEPTH/2 + 0.01), new THREE.Vector3(RACK_WIDTH/2 - 0.2, y, RACK_DEPTH/2 + 0.01)];
     const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    const line = new THREE.Line(geo, i % 5 === 0  new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.55 }) : lineMat);
+    const line = new THREE.Line(geo, i % 5 === 0 ? new THREE.LineBasicMaterial({ color: 0x3a5a7a, transparent: true, opacity: 0.55 }) : lineMat);
     g.add(line);
   }
 
